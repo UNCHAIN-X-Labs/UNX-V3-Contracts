@@ -154,7 +154,8 @@ describe("Unchain Swap", () => {
     lmFactory = await LMFactory.deploy(
       await halving.getAddress(),
       await nfpManager.getAddress(),
-      await v3Manager.getAddress()
+      await v3Manager.getAddress(),
+      100 // max listing
     );
 
     await v3Manager.setLmFactory(await lmFactory.getAddress());
@@ -265,6 +266,25 @@ describe("Unchain Swap", () => {
           await expect(v3Manager.connect(owner).list(v3PoolCA)).to.not.be
             .reverted;
           expect(await lmPool.actived()).to.be.equal(true);
+        });
+
+        it("Does not exceed max listing", async () => {
+          const poolList: any[] = [];
+          for (let i = 0; i < 101; i++) {
+            const NewToken = await ethers.getContractFactory('ERC20');
+            const newToken = await NewToken.deploy(`TOKEN ${i}`, `T${i}`);
+            const tokenCA = await newToken.getAddress();
+
+            await v3Manager.connect(owner).createPool(await unx.getAddress(), tokenCA, ZeroAddress, 3000);
+            const poolCA = await v3Factory.getPool(await unx.getAddress(), tokenCA, 3000);
+            poolList.push({v3Pool: poolCA, allocation: 100});
+
+            if(i < 100) {
+              await expect(v3Manager.connect(owner).list(poolCA)).to.not.be.reverted;
+            } else {
+              await expect(v3Manager.connect(owner).list(poolCA)).to.be.revertedWith('LiquidityMiningFactory: exceed max.');
+            }
+          }
         });
       });
 

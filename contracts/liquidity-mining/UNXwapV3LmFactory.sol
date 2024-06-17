@@ -22,6 +22,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     mapping(address => address) public lmPools;
 
     uint256 totalAllocation;
+    uint256 maxListing;
 
     modifier onlyManager() {
         require(msg.sender == v3Manager, "Caller is unauthorized");
@@ -38,10 +39,11 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         require(totalAllocation <= 10000, 'Exceed allocation');
     }
 
-    constructor(address halving, address nfpManager, address v3Manager_) {
+    constructor(address halving, address nfpManager, address v3Manager_, uint256 maxListing_) {
         halvingProtocol = IHalvingProtocol(halving);
         nonfungiblePositionManager = INonfungiblePositionManager(nfpManager);
         v3Manager = v3Manager_;
+        maxListing = maxListing_;
     }
 
     function transferReward(address to, uint256 reward) external override {
@@ -62,6 +64,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         lmPool = lmPools[v3Pool];
         require(lmPool != address(0), "LiquidityMiningFactory: lmPool does not exist.");
         require(!listedV3Pools.contains(v3Pool), "LiquidityMiningFactory: already listed.");
+        require(listedV3Pools.length() < maxListing, "LiquidityMiningFactory: exceed max.");
 
         UNXwapV3LmPool(lmPool).activate();
         listedV3Pools.add(v3Pool);
