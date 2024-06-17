@@ -27,14 +27,14 @@ import {
 import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
 enum FeeAmount {
-  LOWEST = 100,
+  // LOWEST = 100,
   LOW = 500,
   MEDIUM = 3000,
   HIGH = 10000,
 }
 
 const TICK_SPACINGS: { [amount in FeeAmount]: number } = {
-  [FeeAmount.LOWEST]: 1,
+  // [FeeAmount.LOWEST]: 1,
   [FeeAmount.LOW]: 10,
   [FeeAmount.MEDIUM]: 60,
   [FeeAmount.HIGH]: 200,
@@ -119,23 +119,26 @@ describe("Unchain Swap", () => {
       "UNXwapV3Factory",
       await v3Manager.factory()
     );
+    await v3Manager.enableFeeAmount(FeeAmount.HIGH, TICK_SPACINGS[FeeAmount.HIGH]);
+    await v3Manager.enableFeeAmount(FeeAmount.MEDIUM, TICK_SPACINGS[FeeAmount.MEDIUM]);
+    await v3Manager.enableFeeAmount(FeeAmount.LOW, TICK_SPACINGS[10000]);
 
     const WETH9 = await ethers.getContractFactory("WETH9");
     wETH9 = (await WETH9.deploy()) as _WETH9;
     wETH9.address = await wETH9.getAddress();
 
-    const NftDescriptorLib = await ethers.getContractFactory("NFTDescriptor");
-    const nftDescriptorLib = await NftDescriptorLib.deploy();
-    const NFPDescriptor = await ethers.getContractFactory(
-      "NonfungibleTokenPositionDescriptor",
-      {
-        libraries: { NFTDescriptor: await nftDescriptorLib.getAddress() },
-      }
-    );
-    const nftDescriptor = await NFPDescriptor.deploy(
-      await wETH9.getAddress(),
-      asciiStringToBytes32("BNB")
-    );
+    // const NftDescriptorLib = await ethers.getContractFactory("NFTDescriptor");
+    // const nftDescriptorLib = await NftDescriptorLib.deploy();
+    // const NFPDescriptor = await ethers.getContractFactory(
+    //   "NonfungibleTokenPositionDescriptor",
+    //   {
+    //     libraries: { NFTDescriptor: await nftDescriptorLib.getAddress() },
+    //   }
+    // );
+    // const nftDescriptor = await NFPDescriptor.deploy(
+    //   await wETH9.getAddress(),
+    //   asciiStringToBytes32("BNB")
+    // );
 
     const NFPManager = await ethers.getContractFactory(
       "NonfungiblePositionManager"
@@ -143,7 +146,8 @@ describe("Unchain Swap", () => {
     nfpManager = await NFPManager.deploy(
       await v3Factory.getAddress(),
       await wETH9.getAddress(),
-      await nftDescriptor.getAddress()
+      // await nftDescriptor.getAddress()
+      "https://test.com",
     );
 
     const LMFactory = await ethers.getContractFactory("UNXwapV3LmFactory");
@@ -235,19 +239,18 @@ describe("Unchain Swap", () => {
       let v3PoolCA: string;
       let lmPool: UNXwapV3LmPool;
       let lmPoolCA: string;
-      let tokenA: string;
-      let tokenB: string;
+      let token0: any;
+      let token1: any;
 
       beforeEach(async () => {
-        tokenA = await unx.getAddress();
-        tokenB = await wETH9.getAddress();
+        [token0, token1] = sortedTokens(unx, wETH9);
         v3PoolCA = computePoolAddress(
           await v3Factory.getAddress(),
-          [tokenA, tokenB],
-          3000
+          [token0.address, token1.address],
+          FeeAmount.MEDIUM
         );
 
-        await v3Manager.createPool(tokenA, tokenB, ZeroAddress, 3000);
+        await v3Manager.createPool(token0, token1, ZeroAddress, FeeAmount.MEDIUM);
         v3Pool = await ethers.getContractAt("UNXwapV3Pool", v3PoolCA);
 
         lmPoolCA = await v3Pool.lmPool();
@@ -291,7 +294,7 @@ describe("Unchain Swap", () => {
 
             await v3Manager.connect(owner).allocate(poolList);
             await v3Manager.connect(owner).delist(poolList[0].v3Pool);
-
+            
             for (let i = 1; i < 100; i++) {
                 expect(await lmFactory.allocationOf(await lmFactory.lmPools(poolList[i].v3Pool))).to.be.equal(101);
             }
@@ -328,8 +331,8 @@ describe("Unchain Swap", () => {
 
           const addLiq = await nfpManager.connect(user).mint(
             {
-              token0: tokenA,
-              token1: tokenB,
+              token0: token0,
+              token1: token1,
               tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               amount0Desired: parseEther("100"),
@@ -338,7 +341,7 @@ describe("Unchain Swap", () => {
               amount1Min: 0,
               recipient: user.address,
               deadline: deadline,
-              fee: 3000,
+              fee: FeeAmount.MEDIUM,
             },
             {
               value: parseEther("100"),
@@ -390,8 +393,8 @@ describe("Unchain Swap", () => {
             .approve(await nfpManager.getAddress(), parseEther("200"));
           const userAddLiq = await nfpManager.connect(user).mint(
             {
-              token0: tokenA,
-              token1: tokenB,
+              token0: token0,
+              token1: token1,
               tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               amount0Desired: parseEther("100"),
@@ -400,7 +403,7 @@ describe("Unchain Swap", () => {
               amount1Min: 0,
               recipient: user.address,
               deadline: deadline,
-              fee: 3000,
+              fee: FeeAmount.MEDIUM,
             },
             {
               value: parseEther("100"),
@@ -415,8 +418,8 @@ describe("Unchain Swap", () => {
             .approve(await nfpManager.getAddress(), parseEther("200"));
           const otherAddLiq = await nfpManager.connect(other).mint(
             {
-              token0: tokenA,
-              token1: tokenB,
+              token0: token0,
+              token1: token1,
               tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               amount0Desired: parseEther("100"),
@@ -425,7 +428,7 @@ describe("Unchain Swap", () => {
               amount1Min: 0,
               recipient: other.address,
               deadline: deadline,
-              fee: 3000,
+              fee: FeeAmount.MEDIUM,
             },
             {
               value: parseEther("100"),
@@ -486,8 +489,8 @@ describe("Unchain Swap", () => {
             .approve(await nfpManager.getAddress(), parseEther("200"));
           const userAddLiq = await nfpManager.connect(user).mint(
             {
-              token0: tokenA,
-              token1: tokenB,
+              token0: token0,
+              token1: token1,
               tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               amount0Desired: parseEther("100"),
@@ -496,7 +499,7 @@ describe("Unchain Swap", () => {
               amount1Min: 0,
               recipient: user.address,
               deadline: deadline,
-              fee: 3000,
+              fee: FeeAmount.MEDIUM,
             },
             {
               value: parseEther("100"),
@@ -614,17 +617,19 @@ describe("Unchain Swap", () => {
             FeeAmount.MEDIUM
           );
 
-          console.log("sqrtRatioX96: ", sqrtRatioX96, tick);
+          // console.log("sqrtRatioX96: ", sqrtRatioX96, tick);
 
           const _leftRangeValue = (5 * 90 / 100).toString(); // 90%
           const _rightRangeValue =  (5 * 110 / 100).toString(); // 110%
 
-          const lowPrice = tryParsePrice(baseToken, quoteToken, _rightRangeValue);
-          const highPrice = tryParsePrice(baseToken, quoteToken, _leftRangeValue);
+          const lowPrice = tryParsePrice(baseToken, quoteToken, _leftRangeValue);
+          const highPrice = tryParsePrice(baseToken, quoteToken, _rightRangeValue);
           if (!lowPrice || !highPrice) throw new Error('fail get price');
 
           let lowTick = tryParseTick(baseToken, quoteToken, FeeAmount.MEDIUM, lowPrice.toSignificant(8)) || 0;
           let highTick = tryParseTick(baseToken, quoteToken, FeeAmount.MEDIUM, highPrice.toSignificant(8)) || 0;
+          console.log(lowTick)
+          console.log(highTick)
 
           await addLiquidity(
             { currency: baseToken, amount: parseEther("0.895559435335869704") },
@@ -647,8 +652,8 @@ describe("Unchain Swap", () => {
           ]);
 
           await mine(10);
-
-          let path = encodePath([tokenA, tokenB], [FeeAmount.MEDIUM]);
+          
+          let path = encodePath([token1.address, token0.address], [FeeAmount.MEDIUM]);
           let inputAmount = parseEther("200");
           let outputAmount = await xQuoterV2.quoteExactInput.staticCall(
             path,
@@ -694,7 +699,7 @@ describe("Unchain Swap", () => {
               .harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: tokenId}))[0].toString())
           );
 
-          path = encodePath([tokenB, tokenA], [FeeAmount.MEDIUM]);
+          path = encodePath([token0.address, token1.address], [FeeAmount.MEDIUM]);
           inputAmount = parseEther("28.922626175148534256");
           outputAmount = await xQuoterV2.quoteExactInput.staticCall(
             path,
@@ -748,8 +753,8 @@ describe("Unchain Swap", () => {
 
           const addLiq = await nfpManager.connect(user).mint(
             {
-              token0: tokenA,
-              token1: tokenB,
+              token0: token0,
+              token1: token1,
               tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
               amount0Desired: parseEther("100"),
@@ -758,7 +763,7 @@ describe("Unchain Swap", () => {
               amount1Min: 0,
               recipient: user.address,
               deadline: deadline,
-              fee: 3000,
+              fee: FeeAmount.MEDIUM,
             },
             {
               value: parseEther("100"),
@@ -832,8 +837,8 @@ describe("Unchain Swap", () => {
   
             const addLiq = await nfpManager.connect(user).mint(
               {
-                token0: tokenA,
-                token1: tokenB,
+                token0: token0,
+                token1: token1,
                 tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
                 tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
                 amount0Desired: parseEther("100"),
@@ -842,7 +847,7 @@ describe("Unchain Swap", () => {
                 amount1Min: 0,
                 recipient: user.address,
                 deadline: deadline,
-                fee: 3000,
+                fee: FeeAmount.MEDIUM,
               },
               {
                 value: parseEther("100"),
@@ -1157,7 +1162,7 @@ describe("Unchain Swap", () => {
       let data: string[] = [];
       let v3Pool: string;
       let lmPool: string;
-      let createAndInitializePoolIfNecessary: string, mint: string, increaseLiq: string, decreaseLiq: string, collect: string, harvest: string;
+      let createAndInitializePoolIfNecessary: string, mint: string, decreaseLiq: string, collect: string, harvest: string;
 
       beforeEach(async () => {
         [token0, token1] = sortedTokens(unx, sampleERC20);
@@ -1321,6 +1326,100 @@ describe("Unchain Swap", () => {
 
     });
     
+    describe('Protocol fee', () => {
+      let data: string[] = [];
+      let v3Pool: string, _v3Pool: string;
+      let createAndInitializePoolIfNecessary: string, mint: string, collect: string;
+
+      beforeEach(async () => {
+        await v3Manager.createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM);
+        _v3Pool = await v3Factory.getPool(unx.address, wETH9.address, FeeAmount.MEDIUM);
+        const _v3PoolContract = await ethers.getContractAt('UNXwapV3Pool', _v3Pool);
+        await _v3PoolContract.initialize(sqrtPriceX96);
+
+        [token0, token1] = sortedTokens(unx, sampleERC20);
+        await v3Manager.createPool(unx.address, sampleERC20.address, ZeroAddress, FeeAmount.MEDIUM);
+        v3Pool = await v3Factory.getPool(unx.address, sampleERC20.address, FeeAmount.MEDIUM);
+        await v3Manager.list(v3Pool);
+        await v3Manager.allocate([{ v3Pool: v3Pool, allocation: 1000 }]);
+        
+        await unx.transfer(user.address, parseEther("10000"));
+        await unx.connect(user).approve(nfpManager, parseEther("100"));
+        await sampleERC20.transfer(user.address, parseEther("10000"));
+        await sampleERC20.connect(user).approve(nfpManager, parseEther("100"));
+
+        await unx.transfer(other.address, parseEther("10000"));
+        await sampleERC20.transfer(other.address, parseEther("10000"));
+
+        token0Amount = parseEther("1");
+        token1Amount = parseEther("1");
+
+        createAndInitializePoolIfNecessary = nfpManager.interface.encodeFunctionData('createAndInitializePoolIfNecessary', [
+          token0.address,
+          token1.address,
+          FeeAmount.MEDIUM,
+          sqrtPriceX96
+        ]);
+        mint = nfpManager.interface.encodeFunctionData('mint', [
+          {
+              token0: token0.address,
+              token1: token1.address,
+              tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+              tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+              fee: FeeAmount.MEDIUM,
+              recipient: user.address,
+              amount0Desired: token0Amount,
+              amount1Desired: token1Amount,
+              amount0Min: 0,
+              amount1Min: 0,
+              deadline
+          },
+        ]);
+
+        data = [createAndInitializePoolIfNecessary, mint];
+        await nfpManager.connect(user).multicall(data, { value: token1Amount });
+
+        await mine(genesisBlock - await ethers.provider.getBlockNumber());
+      });
+
+      it('Check protocol fee', async () => {
+        await v3Manager.setFeeProtocol([
+          {v3Pool: v3Pool, feeProtocol0: 4, feeProtocol1: 4},
+          {v3Pool: _v3Pool, feeProtocol0: 4, feeProtocol1: 4}
+        ]);
+
+        let path = encodePath([token0.address, token1.address], [FeeAmount.MEDIUM]);
+        let inputAmount = parseEther("200");
+        let outputAmount = await xQuoterV2.quoteExactInput.staticCall(
+          path,
+          inputAmount
+        );
+       
+        await unx
+          .connect(other)
+          .approve(await xRouter.getAddress(), parseEther("200"));
+        await xRouter.connect(other).exactInput({
+          path,
+          recipient: other.address,
+          deadline,
+          amountIn: inputAmount,
+          amountOutMinimum: outputAmount.amountOut,
+        });
+
+        const uint128Max = BigInt(2 ** 64 - 1);
+        const swapFee = await nfpManager.connect(user).collect.staticCall({
+            tokenId: 1,
+            recipient: user.address,
+            amount0Max: uint128Max,
+            amount1Max: uint128Max,
+        });
+        const v3PoolContract = await ethers.getContractAt('UNXwapV3Pool', v3Pool);
+        const protocolFee = await v3PoolContract.protocolFees();
+
+        console.log(swapFee);
+        console.log(protocolFee);
+      });
+    });
 
   });
 
