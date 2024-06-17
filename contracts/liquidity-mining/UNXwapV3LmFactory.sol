@@ -105,7 +105,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         result = new ListingInfo[](len);
         for (uint256 i = 0; i < len; i++) {
             address v3Pool = listedV3Pools.at(i);
-            result[i] = ListingInfo(v3Pool, allocationOf(v3Pool));
+            result[i] = ListingInfo(v3Pool, allocationOf(lmPools[v3Pool]));
         }
     }
 

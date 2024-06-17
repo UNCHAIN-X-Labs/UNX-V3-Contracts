@@ -4,9 +4,9 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import '../core/interfaces/IUniswapV3Pool.sol';
 import '../core/libraries/FixedPoint128.sol';
 import '../core/libraries/FullMath.sol';
+import '../core/interfaces/IUNXwapV3Pool.sol';
 
 import './interfaces/INonfungiblePositionManager.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
@@ -22,7 +22,6 @@ import './base/PoolInitializer.sol';
 
 import '../liquidity-mining/interfaces/IUNXwapV3LmPool.sol';
 import '../liquidity-mining/interfaces/IUNXwapV3LmFactory.sol';
-import '../core/interfaces/IUNXwapV3Pool.sol';
 
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
@@ -58,6 +57,12 @@ contract NonfungiblePositionManager is
         uint128 tokensOwed1;
     }
 
+    // Parameters for harvest
+    struct HarvestParams {
+        address v3Pool;
+        uint256 tokenId;
+    }
+
     /// @dev IDs of pools assigned by this contract
     mapping(address => uint80) private _poolIds;
 
@@ -73,14 +78,25 @@ contract NonfungiblePositionManager is
     uint80 private _nextPoolId = 1;
 
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
-    address private immutable _tokenDescriptor;
+    address private _tokenDescriptor;
+
+    address public owner;
+
+    event OwnerChanged(address indexed oldOwner, address indexed newOwner);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
 
     constructor(
         address _factory,
         address _WETH9,
-        address _tokenDescriptor_
+        string memory uri
     ) ERC721Permit('UNXwap V3 Positions NFT-V1', 'UNX-V3-POS', '1') PeripheryImmutableState(_factory, _WETH9) {
-        _tokenDescriptor = _tokenDescriptor_;
+        _setBaseURI(uri);
+        owner = msg.sender;
+        emit OwnerChanged(address(0), msg.sender);
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -188,8 +204,7 @@ contract NonfungiblePositionManager is
 
         emit IncreaseLiquidity(tokenId, liquidity, amount0, amount1);
 
-        // UNX Custom
-        _updatePostion(pool, tokenId);
+        _updateLmPostion(pool, tokenId);
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -199,11 +214,13 @@ contract NonfungiblePositionManager is
 
     function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {
         require(_exists(tokenId));
-        return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
-    }
 
-    // save bytecode by removing implementation of unused method
-    function baseURI() public pure override returns (string memory) {}
+        if(_tokenDescriptor != address(0)) {
+            return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
+        } else {
+            return baseURI();
+        }
+    }
 
     /// @inheritdoc INonfungiblePositionManager
     function increaseLiquidity(IncreaseLiquidityParams calldata params)
@@ -264,8 +281,7 @@ contract NonfungiblePositionManager is
 
         emit IncreaseLiquidity(params.tokenId, liquidity, amount0, amount1);
 
-        // UNX Custom
-        _updatePostion(pool, params.tokenId);
+        _updateLmPostion(pool, params.tokenId);
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -319,8 +335,7 @@ contract NonfungiblePositionManager is
 
         emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
 
-        // UNX Custom
-        _updatePostion(pool, params.tokenId);
+        _updateLmPostion(pool, params.tokenId);
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -416,24 +431,35 @@ contract NonfungiblePositionManager is
         emit Approval(ownerOf(tokenId), to, tokenId);
     }
 
-    /* Below code is UNX Custom */
-
-     struct HarvestParams {
-        address v3Pool;
-        uint256 tokenId;
+    function setOwner(address _owner) external onlyOwner {
+        emit OwnerChanged(owner, _owner);
+        owner = _owner;
     }
 
+    function setTokenDescriptor(address tokenDescriptor) external {
+        require(msg.sender == owner);
+        _tokenDescriptor = tokenDescriptor;
+    }
+
+    /// @notice Transfer reward to position owner.
+    /// @param params {HarvestParams}
     function harvest(HarvestParams calldata params) external nonReentrant returns (uint256 reward) {
         reward = IUNXwapV3LmPool(IUNXwapV3Pool(params.v3Pool).lmPool()).harvest(params.tokenId);
     }
-
+    
+    /// @notice Transfer reward to position owners in batch.
+    /// @param params The array of {HarvestParams}
     function harvestBatch(HarvestParams[] calldata params) external nonReentrant returns (uint256 reward) {
         for (uint256 i = 0; i < params.length; i++) {
             reward += IUNXwapV3LmPool(IUNXwapV3Pool(params[i].v3Pool).lmPool()).harvest(params[i].tokenId);
         }
     }
-
-    function _updatePostion(IUNXwapV3Pool pool, uint256 tokenId) internal {
+    
+    /// @notice Synchronize the updated postion information with LmPool Position.
+    /// @dev This function should be called when any update liquidity.
+    /// @param pool The IUNXwapV3Pool interface
+    /// @param tokenId The token ID of position
+    function _updateLmPostion(IUNXwapV3Pool pool, uint256 tokenId) internal {
         IUNXwapV3LmPool(pool.lmPool()).updateLiquidity(msg.sender, tokenId);
     }
 }

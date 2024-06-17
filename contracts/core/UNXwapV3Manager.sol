@@ -77,17 +77,25 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
         deployFee = fee;
     }
 
-    function setFeeProtocol(address v3Pool, uint8 feeProtocol0, uint8 feeProtocol1) external override onlyOwnerOrExecutor {
-        UNXwapV3Pool(v3Pool).setFeeProtocol(feeProtocol0, feeProtocol1);
+    function setFeeProtocol(ProtocolFeeParams[] calldata params) external override onlyOwnerOrExecutor {
+        for(uint256 i = 0; i < params.length; i++) {
+            UNXwapV3Pool(params[i].v3Pool).setFeeProtocol(params[i].feeProtocol0, params[i].feeProtocol1);
+        }
+    }
+
+    function enableFeeAmount(uint24 fee, int24 tickSpacing) external override onlyOwnerOrExecutor {
+        factory.enableFeeAmount(fee, tickSpacing);
     }
 
     function collectProtocol(
-        address v3Pool,
         address collector,
-        uint128 amount0Requested,
-        uint128 amount1Requested
-    ) external override onlyOwnerOrExecutor returns (uint128 amount0, uint128 amount1) {
-        (amount0, amount1) = UNXwapV3Pool(v3Pool).collectProtocol(collector, amount0Requested, amount1Requested);
+        ProtocolFeeParams[] calldata params
+    ) external override onlyOwnerOrExecutor returns (uint128 totalAmount0, uint128 totalAmount1) {
+        for(uint256 i = 0; i < params.length; i++) {
+            (uint128 amount0, uint128 amount1) = UNXwapV3Pool(params[i].v3Pool).collectProtocol(collector, params[i].feeProtocol0, params[i].feeProtocol1);
+            totalAmount0 += amount0;
+            totalAmount1 += amount1;
+        }
     }
 
     function _operateDeployFeeProtocol(address payer) internal {

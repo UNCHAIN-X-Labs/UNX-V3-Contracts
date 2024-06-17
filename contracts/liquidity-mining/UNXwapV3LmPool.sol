@@ -29,19 +29,16 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
     IHalvingProtocol public immutable halvingProtocol;
     IUNXwapV3LmFactory public immutable lmFactory;
 
-    uint256 public rewardGrowthGlobalX128;
-
-    mapping(int24 => LmTick.Info) public lmTicks;
-
     uint128 public lmLiquidity;
-
     uint256 public lastUpdateBlock;
     uint256 public lastActivedBlock;
+    uint256 public rewardGrowthGlobalX128;
 
-    // apply 2 decimals. 100.00 $ => 10000
+    // apply 2 decimals. 100.00 % => 10000
     uint256 public override allocation;
     bool public override actived;
 
+    mapping(int24 => LmTick.Info) public lmTicks;
     mapping(uint256 => PositionRewardInfo) public positionRewardInfos;
 
     modifier onlyPool() {

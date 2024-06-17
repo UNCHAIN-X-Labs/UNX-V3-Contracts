@@ -54,6 +54,9 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
     /// @inheritdoc IUniswapV3PoolImmutables
     uint128 public immutable override maxLiquidityPerTick;
 
+    /// @inheritdoc IUNXwapV3Pool
+    IUNXwapV3LmPool public override lmPool;
+
     struct Slot0 {
         // the current price
         uint160 sqrtPriceX96;
@@ -625,7 +628,7 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
                 computedLatestObservation: false
             });
 
-        // UNX Custom
+        // Accumulate the rewards up to the current point before any liquidity and ticks changes via the swap.
         if(address(lmPool) != address(0)) {
             lmPool.accumulateReward();
         }
@@ -713,7 +716,7 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
                         cache.computedLatestObservation = true;
                     }
 
-                    // UNX Custom
+                    // Synchronize the updated tick information with LmTick.
                     if(address(lmPool) != address(0)) {
                         lmPool.crossLmTick(step.tickNext, zeroForOne);
                     }
@@ -879,10 +882,8 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
         emit CollectProtocol(msg.sender, recipient, amount0, amount1);
     }
 
-    /* Below code is UNX Custom */
-
-    IUNXwapV3LmPool public override lmPool;
-
+    /// @inheritdoc IUNXwapV3Pool
+    /// @dev This setter should only be called immediately after this contract is deployed.
     function setLmPool(address lmPool_) external override onlyFactoryOwner {
         lmPool = IUNXwapV3LmPool(lmPool_);
     }

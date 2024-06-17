@@ -11,6 +11,12 @@ interface IUNXwapV3Manager {
         address v3Pool;
         uint256 allocation;
     }
+    
+    struct ProtocolFeeParams {
+        address v3Pool;
+        uint8 feeProtocol0;
+        uint8 feeProtocol1;
+    }
 
     event CollectDeployFee(address indexed deployer, address indexed collector, address indexed feeToken, uint256 fee);
 
@@ -28,8 +34,9 @@ interface IUNXwapV3Manager {
     function setDeployFeeCollector(address collector) external;
     function setDeployable(bool deployable_) external;
     function setDeployFee(uint256 fee) external;
-    function setFeeProtocol(address v3Pool, uint8 feeProtocol0, uint8 feeProtocol1) external;
-    function collectProtocol(address v3Pool, address collector, uint128 amount0Requested, uint128 amount1Requested) external returns (uint128 amount0, uint128 amount1);
+    function setFeeProtocol(ProtocolFeeParams[] calldata params) external;
+    function collectProtocol(address collector, ProtocolFeeParams[] calldata params) external returns (uint128 totalAmount0, uint128 totalAmount1);
+    function enableFeeAmount(uint24 fee, int24 tickSpacing) external;
 
     function factory() external view returns (IUniswapV3Factory);
     function lmFactory() external view returns (IUNXwapV3LmFactory);
