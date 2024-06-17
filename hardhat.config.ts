@@ -11,7 +11,7 @@ dotenv.config();
 const CompilerSettings = {
   optimizer: {
       enabled: true,
-      runs: 20,
+      runs: 10,
   },
 };
 
