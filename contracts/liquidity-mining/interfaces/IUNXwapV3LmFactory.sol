@@ -21,6 +21,7 @@ interface IUNXwapV3LmFactory {
     function list(address v3Pool) external returns (address lmPool);
     function delist(address v3Pool) external;
     function allocate(IUNXwapV3Manager.PoolAllocationParams[] calldata params) external;
+    function setMaxAllocation(uint256 maxValue) external;
     function allocationOf(address v3Pool) external view returns (uint256 allocation);
     function halvingProtocol() external view returns (IHalvingProtocol);
 }

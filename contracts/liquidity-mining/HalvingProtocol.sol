@@ -15,7 +15,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
     uint256 public immutable override endBlock;
     uint256 public immutable override totalSupply;
     address public immutable token;
-    address public operator;
+    mapping(address => bool) public operators;
 
     constructor(HalvingOptions memory options) Ownable() {
         // Set halving options.
@@ -35,18 +35,18 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         endBlock = options.genesisBlock + (options.halvingInterval * options.totalNum) + ((options.totalSupply - totalMiningBeforeLastHalving) / (options.initReward / (2 ** options.totalNum))) - 1;
     }
 
-    function setOperator(address account) external onlyOwner {
-        // Operator should be LmFactory.
-        operator = account;
+    function setOperator(address account, bool trueOrFalse) external onlyOwner {
+        // Operator should be LmFactory or Something rewarded with UNX.
+        operators[account] = trueOrFalse;
     }
 
     function transferReward(address to, uint256 amount) external override {
-        require(msg.sender == operator, "Halving: caller is unauthorized");
+        require(operators[msg.sender], "Halving: caller is unauthorized");
         IERC20(token).transfer(to, amount);
     }
 
-    function rewardPerBlockOf(uint256 halvingCount) external view override returns (uint256 reward) {
-        reward = initReward / (2 ** halvingCount) / 28800;
+    function rewardPerBlockOf(uint256 halvingNum) external view override returns (uint256 reward) {
+        reward = initReward / (2 ** halvingNum) / 28800;
     }    
 
     function currentRewardPerBlock() external view override returns (uint256 reward) {
@@ -67,8 +67,6 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         for(uint256 i = 0; i < totalNum; i++) {
             blocks[i] = genesisBlock_ + (halvingInterval * (i + 1));
         }
-
-        return blocks;
     }
 
     function calculateTotalMiningBeforeLastHalving() public view override returns (uint256 totalMining) {

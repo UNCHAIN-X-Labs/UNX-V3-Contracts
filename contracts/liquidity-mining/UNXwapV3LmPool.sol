@@ -191,8 +191,8 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         reward = halvingProtocol.currentRewardPerBlock() * allocation / 10000;
     }
 
-    function rewardPerBlockOf(uint256 halvingCount) public view returns (uint256 reward) {
-        reward = halvingProtocol.rewardPerBlockOf(halvingCount) * allocation / 10000;
+    function rewardPerBlockOf(uint256 halvingNum) public view returns (uint256 reward) {
+        reward = halvingProtocol.rewardPerBlockOf(halvingNum) * allocation / 10000;
     }
 
     function _calculateReward(uint256 rewardGrowthInside, uint128 liquidity, uint256 tokenId) internal view returns (uint256 reward) {

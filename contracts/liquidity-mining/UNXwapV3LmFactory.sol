@@ -22,6 +22,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     mapping(address => address) public lmPools;
 
     uint256 totalAllocation;
+    uint256 maxAllocation;
     uint256 maxListing;
 
     modifier onlyManager() {
@@ -29,20 +30,16 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         _;
     }
 
-    modifier onlyNFPManager() {
-        require(msg.sender == address(nonfungiblePositionManager), "Caller is unauthorized");
-        _;
-    }
-
     modifier allocationLimiter() {
         _;
-        require(totalAllocation <= 10000, 'Exceed allocation');
+        require(totalAllocation <= maxAllocation, 'Exceed allocation');
     }
 
-    constructor(address halving, address nfpManager, address v3Manager_, uint256 maxListing_) {
+    constructor(address halving, address nfpManager, address v3Manager_, uint256 maxAllocation_, uint256 maxListing_) {
         halvingProtocol = IHalvingProtocol(halving);
         nonfungiblePositionManager = INonfungiblePositionManager(nfpManager);
         v3Manager = v3Manager_;
+        maxAllocation = maxAllocation_;
         maxListing = maxListing_;
     }
 
@@ -97,6 +94,10 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         for(uint256 i = 0; i < params.length; i++) {
             _setAllocation(lmPools[params[i].v3Pool], params[i].allocation);
         }
+    }
+
+    function setMaxAllocation(uint256 maxValue) external onlyManager override {
+        maxAllocation = maxValue;
     }
 
     function allocationOf(address lmPool) public view override returns (uint256 allocation) {

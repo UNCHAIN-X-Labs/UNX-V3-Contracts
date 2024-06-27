@@ -150,16 +150,19 @@ describe("Unchain Swap", () => {
       "https://test.com",
     );
 
+    await v3Manager.setNfpManager(await nfpManager.getAddress());
+
     const LMFactory = await ethers.getContractFactory("UNXwapV3LmFactory");
     lmFactory = await LMFactory.deploy(
       await halving.getAddress(),
       await nfpManager.getAddress(),
       await v3Manager.getAddress(),
+      10000, // max allocation
       100 // max listing
     );
 
     await v3Manager.setLmFactory(await lmFactory.getAddress());
-    await halving.setOperator(await lmFactory.getAddress());
+    await halving.setOperator(await lmFactory.getAddress(), true);
 
     const XRouter = await ethers.getContractFactory("SwapRouter");
     xRouter = await XRouter.deploy(
@@ -200,17 +203,20 @@ describe("Unchain Swap", () => {
       });
 
       it("Does not operate deploy fee protocol when deploy fee is ZERO", async () => {
-        const tokenA = await unx.getAddress();
-        const tokenB = await wETH9.getAddress();
+        // const tokenA = await unx.getAddress();
+        // const tokenB = await wETH9.getAddress();
+        const [tokenA, tokenB] = sortedTokens(unx, wETH9);
+        const sqrtPriceX96 = encodePriceSqrt(BigInt(1), BigInt(1));
 
         await v3Manager.setDeployable(true);
-        await expect(v3Manager.connect(user).createPool(tokenA, tokenB, user.address, 3000))
+        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, 3000, sqrtPriceX96))
           .to.not.be.reverted;
       });
 
       it("Operate deploy fee protocol when deploy fee is greater than ZERO", async () => {
-        const tokenA = await unx.getAddress();
-        const tokenB = await wETH9.getAddress();
+        const [tokenA, tokenB] = sortedTokens(unx, wETH9);
+        const sqrtPriceX96 = encodePriceSqrt(BigInt(1), BigInt(1));
+
         const deployFee = parseEther("100");
 
         await v3Manager.setDeployable(true);
@@ -219,7 +225,7 @@ describe("Unchain Swap", () => {
         await v3Manager.setDeployFeeToken(await unx.getAddress());
 
         // failure
-        await expect(v3Manager.connect(user).createPool(tokenA, tokenB, user.address, 3000))
+        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, 3000, sqrtPriceX96))
           .to.be.reverted;
 
         // success
@@ -228,7 +234,9 @@ describe("Unchain Swap", () => {
           .connect(user)
           .approve(await v3Manager.getAddress(), deployFee);
 
-        await expect(v3Manager.connect(user).createPool(tokenA, tokenB, user.address, 3000))
+        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, 3000, sqrtPriceX96))
+          .to.not.be.reverted;
+        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, 3000, sqrtPriceX96))
           .to.not.be.reverted;
         expect(await unx.balanceOf(user.address)).to.be.equal(0);
         expect(await unx.balanceOf(other.address)).to.be.equal(deployFee);

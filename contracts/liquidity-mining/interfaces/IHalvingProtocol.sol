@@ -18,6 +18,6 @@ interface IHalvingProtocol {
     function halvingBlocks() external view returns (uint256[] memory blocks);
     function totalSupply() external view returns (uint256);
     function calculateTotalMiningBeforeLastHalving() external view returns (uint256 totalMining);
-    function rewardPerBlockOf(uint256 halvingCount) external view returns (uint256 reward);
+    function rewardPerBlockOf(uint256 halvingNum) external view returns (uint256 reward);
 
 }

@@ -17,6 +17,7 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     address public override deployFeeCollector;
     bool public override deployable;
     uint256 public override deployFee;
+    address public nfpManager;
 
     constructor() {
         factory = IUniswapV3Factory(address(new UNXwapV3Factory{salt: keccak256(abi.encode(msg.sender, address(this)))}()));
@@ -25,6 +26,7 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
     function createPool(address tokenA, address tokenB, address payer, uint24 fee) external override returns (address v3Pool, address lmPool) {
         if(deployable) {
+            require(msg.sender == nfpManager, "caller is unauthorized");
             if(deployFee > 0) {
                 _operateDeployFeeProtocol(payer);
             }
@@ -85,6 +87,14 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
     function enableFeeAmount(uint24 fee, int24 tickSpacing) external override onlyOwnerOrExecutor {
         factory.enableFeeAmount(fee, tickSpacing);
+    }
+
+    function setMaxAllocation(uint256 maxValue) external override onlyOwnerOrExecutor {
+        lmFactory.setMaxAllocation(maxValue);
+    }
+
+    function setNfpManager(address nfpManager_) external onlyOwner {
+        nfpManager = nfpManager_;
     }
 
     function collectProtocol(
