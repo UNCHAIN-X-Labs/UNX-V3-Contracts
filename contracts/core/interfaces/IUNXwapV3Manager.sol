@@ -32,15 +32,13 @@ interface IUNXwapV3Manager {
     function allocate(PoolAllocationParams[] calldata params) external;
 
     function setFactoryOwner(address owner_) external;
-
     function setLmFactory(address lmFactory_) external;
-    function setLmPool(address v3Pool, address lmPool) external;
-
     function setDeployFeeToken(address token) external;
     function setDeployFeeCollector(address collector) external;
     function setDeployable(bool deployable_) external;
     function setDeployFee(uint256 fee) external;
     function setFeeProtocol(ProtocolFeeParams[] calldata params) external;
+    
     function collectProtocol(address collector, ProtocolFeeParams[] calldata params) external returns (uint128 totalAmount0, uint128 totalAmount1);
     function enableFeeAmount(uint24 fee, int24 tickSpacing) external;
     function setMaxAllocation(uint256 maxValue) external;

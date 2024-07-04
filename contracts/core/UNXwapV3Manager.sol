@@ -43,7 +43,7 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
         v3Pool = factory.createPool(tokenA, tokenB, fee);
         lmPool = lmFactory.createLmPool(v3Pool);
-        IUNXwapV3Pool(v3Pool).setLmPool(lmPool);
+        _setLmPool(v3Pool, lmPool);
     }
     
     function list(address v3Pool) external override onlyOwnerOrExecutor returns (address lmPool) {
@@ -66,11 +66,6 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
         lmFactory = IUNXwapV3LmFactory(lmFactory_);
         emit SetLmPactory(lmFactory_);
     }
-
-    function setLmPool(address v3Pool, address lmPool) external override onlyOwnerOrExecutor {
-        UNXwapV3Pool(v3Pool).setLmPool(lmPool);
-        emit SetLmPool(v3Pool, lmPool); 
-    }  
 
     function setDeployFeeToken(address token) external override onlyOwnerOrExecutor {
         deployFeeToken = token;
@@ -129,4 +124,9 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
             emit CollectDeployFee(payer, deployFeeCollector, deployFeeToken, deployFee);
         }
     }
+
+    function _setLmPool(address v3Pool, address lmPool) internal {
+        UNXwapV3Pool(v3Pool).setLmPool(lmPool);
+        emit SetLmPool(v3Pool, lmPool); 
+    }  
 }
