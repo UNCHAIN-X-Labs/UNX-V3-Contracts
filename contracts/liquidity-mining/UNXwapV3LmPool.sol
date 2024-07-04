@@ -90,7 +90,8 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
             return;
         }
         
-        uint256 endBlock = actived ? halvingProtocol.endBlock() : lastActivedBlock;
+        uint256 endBlock = actived ? halvingProtocol.endBlock()
+            : lastActivedBlock > halvingProtocol.endBlock() ? halvingProtocol.endBlock() : lastActivedBlock;
 
         if(lmLiquidity != 0) {
             uint256 targetBlock = currentBlock > endBlock ? endBlock : currentBlock;
