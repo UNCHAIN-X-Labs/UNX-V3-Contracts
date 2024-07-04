@@ -170,11 +170,13 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
     function activate() external override onlyLmFactory {
         require(!actived, "lmPool is already actived");
         actived = true;
+        emit Activate();
     }
 
     function deactivate() external override onlyLmFactory whenActived {
         actived = false;
         lastActivedBlock = block.number;
+        emit Deactivate();
     }
 
     function setAllocation(uint256 alloc) external override onlyLmFactory {

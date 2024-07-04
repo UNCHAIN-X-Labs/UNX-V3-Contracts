@@ -19,6 +19,12 @@ interface IUNXwapV3Manager {
     }
 
     event CollectDeployFee(address indexed deployer, address indexed collector, address indexed feeToken, uint256 fee);
+    event SetLmPactory(address lmPactory);
+    event SetDeployFeeToken(address token);
+    event SetDeployFeeCollector(address collector);
+    event SetDeployable(bool trueOrFalse);
+    event SetDeployFee(address indexed token, uint256 fee);
+    event SetLmPool(address indexed v3Pool, address indexed lmPool);
 
     function createPool(address tokenA, address tokenB, address payer, uint24 fee) external returns (address v3Pool, address lmPool);
     function list(address v3Pool) external returns (address lmPool);

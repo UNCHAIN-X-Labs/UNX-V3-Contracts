@@ -15,6 +15,7 @@ interface IUNXwapV3LmFactory {
     event Listing(address indexed v3Pool, address indexed lmPool);
     event Delisting(address indexed v3Pool, address indexed lmPool);
     event Allocate(address indexed lmPool, uint256 allocation);
+    event SetMaxAllocation(uint256 oldValue, uint256 newValue);
 
     function transferReward(address to, uint256 amount) external;
     function createLmPool(address v3Pool) external returns (address lmPool);

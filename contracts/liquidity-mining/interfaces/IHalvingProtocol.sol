@@ -11,6 +11,8 @@ interface IHalvingProtocol {
         uint256 totalSupply;
     }
 
+    event SetOperator(address indexed operator, bool trueOrFalse);
+
     function transferReward(address to, uint256 amount) external;
     function genesisBlock() external view returns (uint256);
     function endBlock() external view returns (uint256);

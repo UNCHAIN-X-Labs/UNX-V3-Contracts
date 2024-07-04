@@ -21,6 +21,8 @@ interface IUNXwapV3LmPool {
     );
 
     event Harvest(address indexed to, uint256 indexed tokenId, uint256 reward);
+    event Activate();
+    event Deactivate();
 
     function accumulateReward() external;
     function crossLmTick(int24 tick, bool zeroForOne) external;

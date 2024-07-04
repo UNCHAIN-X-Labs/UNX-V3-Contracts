@@ -38,6 +38,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
     function setOperator(address account, bool trueOrFalse) external onlyOwner {
         // Operator should be LmFactory or Something rewarded with UNX.
         operators[account] = trueOrFalse;
+        emit SetOperator(account, trueOrFalse);
     }
 
     function transferReward(address to, uint256 amount) external override {

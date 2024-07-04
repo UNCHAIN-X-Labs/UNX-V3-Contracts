@@ -97,7 +97,9 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     }
 
     function setMaxAllocation(uint256 maxValue) external onlyManager override {
+        uint256 oldValue = maxAllocation;
         maxAllocation = maxValue;
+        emit SetMaxAllocation(oldValue, maxValue);
     }
 
     function allocationOf(address lmPool) public view override returns (uint256 allocation) {

@@ -57,26 +57,32 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
     function setLmFactory(address lmFactory_) external override onlyOwner {
         lmFactory = IUNXwapV3LmFactory(lmFactory_);
+        emit SetLmPactory(lmFactory_);
     }
 
     function setLmPool(address v3Pool, address lmPool) external override onlyOwnerOrExecutor {
         UNXwapV3Pool(v3Pool).setLmPool(lmPool);
+        emit SetLmPool(v3Pool, lmPool); 
     }  
 
     function setDeployFeeToken(address token) external override onlyOwnerOrExecutor {
         deployFeeToken = token;
+        emit SetDeployFeeToken(token);
     }
 
     function setDeployFeeCollector(address collector) external override onlyOwnerOrExecutor {
         deployFeeCollector = collector;
+        emit SetDeployFeeCollector(collector);
     }
 
     function setDeployable(bool deployable_) external override onlyOwnerOrExecutor {
         deployable = deployable_;
+        emit SetDeployable(deployable_);
     }
 
     function setDeployFee(uint256 fee) external override onlyOwnerOrExecutor {
         deployFee = fee;
+        emit SetDeployFee(deployFeeToken, fee);
     }
 
     function setFeeProtocol(ProtocolFeeParams[] calldata params) external override onlyOwnerOrExecutor {
