@@ -100,27 +100,23 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
                 return;
             }
 
-            uint256 duration = targetBlock - lastestBlock;
-            if(duration > 0) {
-                uint256[] memory halvingBlocks = halvingProtocol.halvingBlocks();
-                uint256 tmpUpdatedBlock = lastestBlock;
+            uint256[] memory halvingBlocks = halvingProtocol.halvingBlocks();
+            uint256 tmpUpdatedBlock = lastestBlock;
 
-                for(uint256 i = 0; i < halvingBlocks.length; i++) {
-                    if(halvingBlocks[i] > tmpUpdatedBlock && halvingBlocks[i] <= targetBlock) {
-                        // Accumlate reward before halving
-                        // before-halving duration (halvingBlocks[i] - tmpUpdatedBlock - 1)
-                        rewardGrowthGlobalX128 += FullMath.mulDiv((halvingBlocks[i] - tmpUpdatedBlock - 1), FullMath.mulDiv(rewardPerBlockOf(i), FixedPoint128.Q128, REWARD_PRECISION), lmLiquidity);
-                        tmpUpdatedBlock = halvingBlocks[i] - 1;
-                    }
-                }
-
-                // Accumlate reward after halving
-                // after-halving duration (targetBlock - tmpUpdatedBlock)
-                if(tmpUpdatedBlock < targetBlock) {
-                    rewardGrowthGlobalX128 += FullMath.mulDiv((targetBlock - tmpUpdatedBlock), FullMath.mulDiv(currentRewardPerBlock(), FixedPoint128.Q128, REWARD_PRECISION), lmLiquidity);
+            for(uint256 i = 0; i < halvingBlocks.length; i++) {
+                if(halvingBlocks[i] > tmpUpdatedBlock && halvingBlocks[i] <= targetBlock) {
+                    // Accumlate reward before halving
+                    // before-halving duration (halvingBlocks[i] - tmpUpdatedBlock - 1)
+                    rewardGrowthGlobalX128 += FullMath.mulDiv((halvingBlocks[i] - tmpUpdatedBlock - 1), FullMath.mulDiv(rewardPerBlockOf(i), FixedPoint128.Q128, REWARD_PRECISION), lmLiquidity);
+                    tmpUpdatedBlock = halvingBlocks[i] - 1;
                 }
             }
 
+            // Accumlate reward after halving
+            // after-halving duration (targetBlock - tmpUpdatedBlock)
+            if(tmpUpdatedBlock < targetBlock) {
+                rewardGrowthGlobalX128 += FullMath.mulDiv((targetBlock - tmpUpdatedBlock), FullMath.mulDiv(currentRewardPerBlock(), FixedPoint128.Q128, REWARD_PRECISION), lmLiquidity);
+            }
         }
         
         lastUpdateBlock = currentBlock;
