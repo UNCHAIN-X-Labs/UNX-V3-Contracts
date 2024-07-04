@@ -439,12 +439,6 @@ contract NonfungiblePositionManager is
     function setTokenDescriptor(address tokenDescriptor) external onlyOwner {
         _tokenDescriptor = tokenDescriptor;
     }
-
-    /// @notice Transfer reward to position owner.
-    /// @param params {HarvestParams}
-    function harvest(HarvestParams calldata params) external nonReentrant returns (uint256 reward) {
-        reward = IUNXwapV3LmPool(IUNXwapV3Pool(params.v3Pool).lmPool()).harvest(params.tokenId);
-    }
     
     /// @notice Transfer reward to position owners in batch.
     /// @param params The array of {HarvestParams}

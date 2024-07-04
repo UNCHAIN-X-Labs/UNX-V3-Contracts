@@ -31,11 +31,17 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
         owner = msg.sender;
     }
 
-    function createPool(address tokenA, address tokenB, address payer, uint24 fee) external override returns (address v3Pool, address lmPool) {
+    function createPool(
+        address tokenA,
+        address tokenB,
+        address payer,
+        uint24 fee,
+        uint256 requiredDeployFee
+    ) external override returns (address v3Pool, address lmPool) {
         if(deployable) {
             require(msg.sender == nfpManager, "caller is unauthorized");
             if(deployFee > 0) {
-                _operateDeployFeeProtocol(payer);
+                _operateDeployFeeProtocol(payer, requiredDeployFee);
             }
         } else {
             _checkOwnerOrExecutor();
@@ -116,13 +122,15 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
         }
     }
 
-    function _operateDeployFeeProtocol(address payer) internal {
-        if(deployFeeCollector != address(0) && deployFeeToken != address(0)) {
-            (bool success, bytes memory data) = deployFeeToken.call(abi.encodeWithSelector(IERC20.transferFrom.selector, payer, deployFeeCollector, deployFee));
-            require(success && (data.length == 0 || abi.decode(data, (bool))), 'pay for deployement fee failed');
+    function _operateDeployFeeProtocol(address payer, uint256 requiredDeployFee) internal {
+        require(deployFeeCollector != address(0), 'deployFeeCollector does not exist');
+        require(deployFeeToken != address(0), 'deployFeeToken does not exist');
+        require(requiredDeployFee == deployFee, 'requiredDeployFee does not equal deployFee');
 
-            emit CollectDeployFee(payer, deployFeeCollector, deployFeeToken, deployFee);
-        }
+        (bool success, bytes memory data) = deployFeeToken.call(abi.encodeWithSelector(IERC20.transferFrom.selector, payer, deployFeeCollector, deployFee));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'pay for deployement fee failed');
+
+        emit CollectDeployFee(payer, deployFeeCollector, deployFeeToken, deployFee);
     }
 
     function _setLmPool(address v3Pool, address lmPool) internal {

@@ -26,7 +26,7 @@ interface IUNXwapV3Manager {
     event SetDeployFee(address indexed token, uint256 fee);
     event SetLmPool(address indexed v3Pool, address indexed lmPool);
 
-    function createPool(address tokenA, address tokenB, address payer, uint24 fee) external returns (address v3Pool, address lmPool);
+    function createPool(address tokenA, address tokenB, address payer, uint24 fee, uint256 requiredDeployFee) external returns (address v3Pool, address lmPool);
     function list(address v3Pool) external returns (address lmPool);
     function delist(address v3Pool) external;
     function allocate(PoolAllocationParams[] calldata params) external;
@@ -38,7 +38,7 @@ interface IUNXwapV3Manager {
     function setDeployable(bool deployable_) external;
     function setDeployFee(uint256 fee) external;
     function setFeeProtocol(ProtocolFeeParams[] calldata params) external;
-    
+
     function collectProtocol(address collector, ProtocolFeeParams[] calldata params) external returns (uint128 totalAmount0, uint128 totalAmount1);
     function enableFeeAmount(uint24 fee, int24 tickSpacing) external;
     function setMaxAllocation(uint256 maxValue) external;
