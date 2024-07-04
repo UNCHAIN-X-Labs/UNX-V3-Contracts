@@ -33,7 +33,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         lastHalvingBlock = options.genesisBlock + (options.halvingInterval * options.totalNum);
         totalSupply = options.totalSupply;
 
-        uint256 totalMiningBeforeLastHalving = 0;
+        uint256 totalMiningBeforeLastHalving;
         for(uint256 i = 0; i < options.totalNum; i++) {
             totalMiningBeforeLastHalving += (options.halvingInterval * (options.initReward / (2 ** i)));
         }
