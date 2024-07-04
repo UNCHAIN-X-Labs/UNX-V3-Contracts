@@ -21,14 +21,14 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     IHalvingProtocol public immutable override halvingProtocol;
     INonfungiblePositionManager public immutable nonfungiblePositionManager;
     address public immutable v3Manager;
+    uint256 public immutable maxListing;
 
     EnumerableSet.AddressSet private listedV3Pools;
 
     mapping(address => address) public lmPools;
 
-    uint256 totalAllocation;
-    uint256 maxAllocation;
-    uint256 maxListing;
+    uint256 public totalAllocation;
+    uint256 public maxAllocation;
 
     modifier onlyManager() {
         require(msg.sender == v3Manager, "Caller is unauthorized");
