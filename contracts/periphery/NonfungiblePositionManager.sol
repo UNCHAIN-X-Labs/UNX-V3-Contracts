@@ -436,8 +436,7 @@ contract NonfungiblePositionManager is
         owner = _owner;
     }
 
-    function setTokenDescriptor(address tokenDescriptor) external {
-        require(msg.sender == owner);
+    function setTokenDescriptor(address tokenDescriptor) external onlyOwner {
         _tokenDescriptor = tokenDescriptor;
     }
 
