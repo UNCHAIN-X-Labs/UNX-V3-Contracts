@@ -7,7 +7,7 @@ interface IHalvingProtocol {
         uint256 genesisBlock;
         uint256 totalNum;
         uint256 halvingInterval;
-        uint256 initReward;
+        uint256 initRewardPerDay;
         uint256 totalSupply;
     }
 

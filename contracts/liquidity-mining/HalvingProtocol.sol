@@ -29,16 +29,16 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         genesisBlock = options.genesisBlock;
         halvingInterval = options.halvingInterval;
         totalNum = options.totalNum;
-        initReward = options.initReward;
+        initReward = options.initRewardPerDay / 28800;
         lastHalvingBlock = options.genesisBlock + (options.halvingInterval * options.totalNum);
         totalSupply = options.totalSupply;
 
         uint256 totalMiningBeforeLastHalving;
         for(uint256 i = 0; i < options.totalNum; i++) {
-            totalMiningBeforeLastHalving += (options.halvingInterval * (options.initReward / (2 ** i)));
+            totalMiningBeforeLastHalving += (options.halvingInterval * (options.initRewardPerDay / 28800 / (2 ** i)));
         }
 
-        endBlock = options.genesisBlock + (options.halvingInterval * options.totalNum) + ((options.totalSupply - totalMiningBeforeLastHalving) / (options.initReward / (2 ** options.totalNum))) - 1;
+        endBlock = options.genesisBlock + (options.halvingInterval * options.totalNum) + ((options.totalSupply - totalMiningBeforeLastHalving) / (options.initRewardPerDay / 28800 / (2 ** options.totalNum))) - 1;
     }
 
     function setOperator(address account, bool trueOrFalse) external onlyOwner {
@@ -53,7 +53,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
     }
 
     function rewardPerBlockOf(uint256 halvingNum) external view override returns (uint256 reward) {
-        reward = initReward / (2 ** halvingNum) / 28800;
+        reward = initReward / (2 ** halvingNum);
     }    
 
     function currentRewardPerBlock() external view override returns (uint256 reward) {
@@ -64,7 +64,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
 
         uint256 elapsedBlocks = currentBlock - genesisBlock;
         uint256 halvingNum = elapsedBlocks / halvingInterval;
-        reward = halvingNum > totalNum ? initReward / (2 ** totalNum) / 28800 : initReward / (2 ** halvingNum) / 28800;
+        reward = halvingNum > totalNum ? initReward / (2 ** totalNum) : initReward / (2 ** halvingNum);
     }
 
     function halvingBlocks() external view override returns (uint256[] memory blocks) {
