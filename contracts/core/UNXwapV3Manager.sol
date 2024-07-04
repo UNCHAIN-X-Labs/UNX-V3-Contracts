@@ -25,10 +25,12 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     bool public override deployable;
     uint256 public override deployFee;
     address public nfpManager;
+    address public protocolFeeCollector;
 
     constructor() {
         factory = IUniswapV3Factory(address(new UNXwapV3Factory{salt: keccak256(abi.encode(msg.sender, address(this)))}()));
         owner = msg.sender;
+        protocolFeeCollector = msg.sender;
     }
 
     function createPool(
@@ -111,12 +113,14 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
         nfpManager = nfpManager_;
     }
 
-    function collectProtocol(
-        address collector,
-        ProtocolFeeParams[] calldata params
-    ) external override onlyOwnerOrExecutor returns (uint128 totalAmount0, uint128 totalAmount1) {
+    function setProtocolFeeCollector(address collector) external onlyOwner {
+        protocolFeeCollector = collector;
+    }
+
+    function collectProtocol(ProtocolFeeParams[] calldata params) external override returns (uint128 totalAmount0, uint128 totalAmount1) {
+        require(msg.sender == protocolFeeCollector);
         for(uint256 i = 0; i < params.length; i++) {
-            (uint128 amount0, uint128 amount1) = UNXwapV3Pool(params[i].v3Pool).collectProtocol(collector, params[i].feeProtocol0, params[i].feeProtocol1);
+            (uint128 amount0, uint128 amount1) = UNXwapV3Pool(params[i].v3Pool).collectProtocol(protocolFeeCollector, params[i].feeProtocol0, params[i].feeProtocol1);
             totalAmount0 += amount0;
             totalAmount1 += amount1;
         }

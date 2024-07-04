@@ -39,7 +39,7 @@ interface IUNXwapV3Manager {
     function setDeployFee(uint256 fee) external;
     function setFeeProtocol(ProtocolFeeParams[] calldata params) external;
 
-    function collectProtocol(address collector, ProtocolFeeParams[] calldata params) external returns (uint128 totalAmount0, uint128 totalAmount1);
+    function collectProtocol(ProtocolFeeParams[] calldata params) external returns (uint128 totalAmount0, uint128 totalAmount1);
     function enableFeeAmount(uint24 fee, int24 tickSpacing) external;
     function setMaxAllocation(uint256 maxValue) external;
 
