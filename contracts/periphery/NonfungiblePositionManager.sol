@@ -2,8 +2,6 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
 import '../core/libraries/FixedPoint128.sol';
 import '../core/libraries/FullMath.sol';
 import '../core/interfaces/IUNXwapV3Pool.sol';
@@ -33,8 +31,7 @@ contract NonfungiblePositionManager is
     PoolInitializer,
     LiquidityManagement,
     PeripheryValidation,
-    SelfPermit,
-    ReentrancyGuard
+    SelfPermit
 {
     // details about the uniswap position
     struct Position {
@@ -80,13 +77,24 @@ contract NonfungiblePositionManager is
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private _tokenDescriptor;
 
+    /// @dev The address of contract owner.
     address public owner;
+
+    /// @dev The status of entrance.
+    bool private _status;
 
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
 
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
+    }
+
+    modifier nonReentrant() {
+        require(!_status);
+        _status = true;
+        _;
+        _status = false;
     }
 
     constructor(
@@ -452,7 +460,7 @@ contract NonfungiblePositionManager is
     /// @dev This function should be called when any update liquidity.
     /// @param pool The IUNXwapV3Pool interface
     /// @param tokenId The token ID of position
-    function _updateLmPostion(IUNXwapV3Pool pool, uint256 tokenId) internal {
+    function _updateLmPostion(IUNXwapV3Pool pool, uint256 tokenId) internal nonReentrant {
         IUNXwapV3LmPool(pool.lmPool()).updateLiquidity(msg.sender, tokenId);
     }
 }
