@@ -80,8 +80,8 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         require(_isListed(v3Pool), "LiquidityMiningFactory: does not exist listed pool.");
 
         uint256 remains = allocationOf(lmPool);
-        UNXwapV3LmPool(lmPool).deactivate();
         _setAllocation(lmPool, 0);
+        UNXwapV3LmPool(lmPool).deactivate();
         listedV3Pools.remove(v3Pool);
 
         uint256 afLen = listedV3Pools.length();

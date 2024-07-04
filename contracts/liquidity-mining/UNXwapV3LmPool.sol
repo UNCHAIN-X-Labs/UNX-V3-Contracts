@@ -182,6 +182,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
     }
 
     function setAllocation(uint256 alloc) external override onlyLmFactory {
+        require(actived);
         accumulateReward();
         allocation = alloc;
     }
