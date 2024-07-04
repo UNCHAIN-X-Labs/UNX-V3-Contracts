@@ -6,6 +6,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import './interfaces/IHalvingProtocol.sol';
 
+/**
+ * @title HalvingProtocol
+ * @dev {HalvingProtocol} is responsible for calculating the block reward amount according to the UNX halving schedule.
+ * The UNX halving occurs every {halvingInterval} blocks  from the {genesisBlock}.
+ * After the final halving, mining will continue with a fixed reward(last reward amount halved) amount until the remaining supply is exhausted.
+ */
 contract HalvingProtocol is IHalvingProtocol, Ownable {
     uint256 public immutable override genesisBlock;
     uint256 public immutable halvingInterval;

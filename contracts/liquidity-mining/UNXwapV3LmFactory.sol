@@ -10,6 +10,11 @@ import './interfaces/IUNXwapV3LmPool.sol';
 import '../common/CommonAuth.sol';
 import './UNXwapV3LmPool.sol';
 
+/**
+ * @title UNXwapV3LmFactory
+ * @dev {UNXwapV3LmFactory} includes comprehensive management logic for liquidity mining pools,such as creating, activating/deactivating LmPools, and allocating rewards.
+ * Its execution functions cannot be called independently and can only be executed by the UNXwapV3Manager.
+ */
 contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     using EnumerableSet for EnumerableSet.AddressSet;
 

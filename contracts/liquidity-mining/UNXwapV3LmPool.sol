@@ -14,6 +14,12 @@ import './interfaces/IUNXwapV3LmFactory.sol';
 import './interfaces/IUNXwapV3LmPool.sol';
 import './interfaces/IHalvingProtocol.sol';
 
+/**
+ * @title UNXwapV3LmPool
+ * @dev {UNXwapV3LmPool} is the contract that actually manages reward information for each liquidity position.
+ * It only accumulates rewards when the mining pool is active, and no rewards are accumulated if the liquidity is zero.
+ * Rewards that are not accumulated while the pool is active will remain permanently locked in the HalvingProtocol and will not circulate in the market.
+ */
 contract UNXwapV3LmPool is IUNXwapV3LmPool {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;

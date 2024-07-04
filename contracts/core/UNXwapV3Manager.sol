@@ -9,6 +9,13 @@ import '../common/CommonAuth.sol';
 import './UNXwapV3Factory.sol';
 import  '../liquidity-mining/UNXwapV3LmFactory.sol';
 
+/**
+ * @title UNXwapV3Manager
+ * @dev {UNXwapV3Manager} serves as the top-level manager of the UNXwap Protocol, overseeing other contracts within the protocol.
+ * It has the authority to set important configuration values for the protocol.
+ * But once the DAO is established, these authorities will be transferred to the DAO, and the executor will be the contract address that executes the DAO’s decisions.
+ * Ultimately, when the DAO reaches a stable phase, the team will relinquish ownership by changing the owner to the zero address.
+ */
 contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     IUniswapV3Factory public immutable override factory;
     IUNXwapV3LmFactory public override lmFactory;
