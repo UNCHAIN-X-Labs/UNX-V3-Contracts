@@ -60,7 +60,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     function list(address v3Pool) external override onlyManager returns (address lmPool) {
         lmPool = lmPools[v3Pool];
         require(lmPool != address(0), "LiquidityMiningFactory: lmPool does not exist.");
-        require(!listedV3Pools.contains(v3Pool), "LiquidityMiningFactory: already listed.");
+        require(!_isListed(v3Pool), "LiquidityMiningFactory: already listed.");
         require(listedV3Pools.length() < maxListing, "LiquidityMiningFactory: exceed max.");
 
         UNXwapV3LmPool(lmPool).activate();
@@ -72,7 +72,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     function delist(address v3Pool) external override onlyManager allocationLimiter {
         address lmPool = lmPools[v3Pool];
         require(lmPool != address(0), "LiquidityMiningFactory: lmPool does not exist.");
-        _isListed(v3Pool);
+        require(_isListed(v3Pool), "LiquidityMiningFactory: does not exist listed pool.");
 
         uint256 remains = allocationOf(lmPool);
         UNXwapV3LmPool(lmPool).deactivate();
@@ -124,7 +124,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         emit Allocate(lmPool, allocation);
     }
 
-    function _isListed(address v3Pool) internal view {
-        require(listedV3Pools.contains(v3Pool), "LiquidityMiningFactory: does not exist listed pool.");
+    function _isListed(address v3Pool) internal view returns (bool) {
+        return listedV3Pools.contains(v3Pool);
     }
 }
