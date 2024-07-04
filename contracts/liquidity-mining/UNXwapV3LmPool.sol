@@ -174,7 +174,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
     }
 
     function deactivate() external override onlyLmFactory whenActived {
-        actived = false;
+        delete actived;
         lastActivedBlock = block.number;
         emit Deactivate();
     }
@@ -211,7 +211,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
 
         if (reward > 0) {
             if (to != address(0)) {
-                positionRewardInfos[tokenId].reward = 0;
+                delete positionRewardInfos[tokenId].reward;
                 lmFactory.transferReward(to, reward);
                 emit Harvest(to, tokenId, reward);
             } else {
