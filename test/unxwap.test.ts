@@ -27,16 +27,16 @@ import {
 import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
 enum FeeAmount {
-  // LOWEST = 100,
+  LOWEST = 100,
   LOW = 500,
-  MEDIUM = 3000,
+  MEDIUM = 2500,
   HIGH = 10000,
 }
 
 const TICK_SPACINGS: { [amount in FeeAmount]: number } = {
-  // [FeeAmount.LOWEST]: 1,
+  [FeeAmount.LOWEST]: 1,
   [FeeAmount.LOW]: 10,
-  [FeeAmount.MEDIUM]: 60,
+  [FeeAmount.MEDIUM]: 50,
   [FeeAmount.HIGH]: 200,
 };
 
@@ -106,8 +106,8 @@ describe("Unchain Swap", () => {
       token: await unx.getAddress(),
       genesisBlock: genesisBlock,
       totalNum: 5,
-      halvingInterval: 28800,
-      initReward: parseEther("300000"),
+      halvingInterval: 21024000,
+      initRewardPerDay: parseEther("300000"),
       totalSupply: parseEther("9550000000"),
     });
 
@@ -119,9 +119,10 @@ describe("Unchain Swap", () => {
       "UNXwapV3Factory",
       await v3Manager.factory()
     );
-    await v3Manager.enableFeeAmount(FeeAmount.HIGH, TICK_SPACINGS[FeeAmount.HIGH]);
-    await v3Manager.enableFeeAmount(FeeAmount.MEDIUM, TICK_SPACINGS[FeeAmount.MEDIUM]);
-    await v3Manager.enableFeeAmount(FeeAmount.LOW, TICK_SPACINGS[10000]);
+    // await v3Manager.enableFeeAmount(FeeAmount.HIGH, TICK_SPACINGS[FeeAmount.HIGH]);
+    // await v3Manager.enableFeeAmount(FeeAmount.MEDIUM, TICK_SPACINGS[FeeAmount.MEDIUM]);
+    // await v3Manager.enableFeeAmount(FeeAmount.LOW, TICK_SPACINGS[FeeAmount.LOW]);
+    // await v3Manager.enableFeeAmount(FeeAmount.LOWEST, TICK_SPACINGS[FeeAmount.LOWEST]);
 
     const WETH9 = await ethers.getContractFactory("WETH9");
     wETH9 = (await WETH9.deploy()) as _WETH9;
@@ -193,12 +194,12 @@ describe("Unchain Swap", () => {
         await v3Manager.setExecutor(executor.address);
 
         await expect(
-          v3Manager.connect(user).createPool(tokenA, tokenB, ZeroAddress,3000)
+          v3Manager.connect(user).createPool(tokenA, tokenB, ZeroAddress, FeeAmount.MEDIUM, 0)
         ).to.be.revertedWith("Caller is unauthorized");
-        await expect(v3Manager.connect(owner).createPool(tokenA, tokenB, ZeroAddress, 3000))
+        await expect(v3Manager.connect(owner).createPool(tokenA, tokenB, ZeroAddress, FeeAmount.MEDIUM, 0))
           .to.not.be.reverted;
         await expect(
-          v3Manager.connect(executor).createPool(tokenA, tokenB, ZeroAddress, 10000)
+          v3Manager.connect(executor).createPool(tokenA, tokenB, ZeroAddress, 10000, 0)
         ).to.not.be.reverted;
       });
 
@@ -209,7 +210,7 @@ describe("Unchain Swap", () => {
         const sqrtPriceX96 = encodePriceSqrt(BigInt(1), BigInt(1));
 
         await v3Manager.setDeployable(true);
-        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, 3000, sqrtPriceX96))
+        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, FeeAmount.MEDIUM, sqrtPriceX96, 0))
           .to.not.be.reverted;
       });
 
@@ -225,7 +226,7 @@ describe("Unchain Swap", () => {
         await v3Manager.setDeployFeeToken(await unx.getAddress());
 
         // failure
-        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, 3000, sqrtPriceX96))
+        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, FeeAmount.MEDIUM, sqrtPriceX96, deployFee))
           .to.be.reverted;
 
         // success
@@ -234,9 +235,9 @@ describe("Unchain Swap", () => {
           .connect(user)
           .approve(await v3Manager.getAddress(), deployFee);
 
-        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, 3000, sqrtPriceX96))
+        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, FeeAmount.MEDIUM, sqrtPriceX96, deployFee))
           .to.not.be.reverted;
-        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, 3000, sqrtPriceX96))
+        await expect(nfpManager.connect(user).createAndInitializePoolIfNecessary(tokenA.address, tokenB.address, FeeAmount.MEDIUM, sqrtPriceX96, deployFee))
           .to.not.be.reverted;
         expect(await unx.balanceOf(user.address)).to.be.equal(0);
         expect(await unx.balanceOf(other.address)).to.be.equal(deployFee);
@@ -259,7 +260,7 @@ describe("Unchain Swap", () => {
           FeeAmount.MEDIUM
         );
 
-        await v3Manager.createPool(token0, token1, ZeroAddress, FeeAmount.MEDIUM);
+        await v3Manager.createPool(token0, token1, ZeroAddress, FeeAmount.MEDIUM, 0);
         v3Pool = await ethers.getContractAt("UNXwapV3Pool", v3PoolCA);
 
         lmPoolCA = await v3Pool.lmPool();
@@ -283,8 +284,8 @@ describe("Unchain Swap", () => {
             const newToken = await NewToken.deploy(`TOKEN ${i}`, `T${i}`);
             const tokenCA = await newToken.getAddress();
 
-            await v3Manager.connect(owner).createPool(await unx.getAddress(), tokenCA, ZeroAddress, 3000);
-            const poolCA = await v3Factory.getPool(await unx.getAddress(), tokenCA, 3000);
+            await v3Manager.connect(owner).createPool(await unx.getAddress(), tokenCA, ZeroAddress, FeeAmount.MEDIUM, 0);
+            const poolCA = await v3Factory.getPool(await unx.getAddress(), tokenCA, FeeAmount.MEDIUM);
             poolList.push({v3Pool: poolCA, allocation: 100});
 
             if(i < 100) {
@@ -314,8 +315,8 @@ describe("Unchain Swap", () => {
                 const newToken = await NewToken.deploy(`TOKEN ${i}`, `T${i}`);
                 const tokenCA = await newToken.getAddress();
 
-                await v3Manager.connect(owner).createPool(await unx.getAddress(), tokenCA, ZeroAddress, 3000);
-                const poolCA = await v3Factory.getPool(await unx.getAddress(), tokenCA, 3000);
+                await v3Manager.connect(owner).createPool(await unx.getAddress(), tokenCA, ZeroAddress, FeeAmount.MEDIUM, 0);
+                const poolCA = await v3Factory.getPool(await unx.getAddress(), tokenCA, FeeAmount.MEDIUM);
                 poolList.push({v3Pool: poolCA, allocation: 100});
                 await v3Manager.connect(owner).list(poolCA);
             }
@@ -381,7 +382,7 @@ describe("Unchain Swap", () => {
           const startBlock = addLiq.blockNumber || 0;
           const bfBalance = await unx.balanceOf(user.address);
 
-          const harvest = await nfpManager.connect(user).harvest({v3Pool: v3PoolCA, tokenId: 1});
+          const harvest = await nfpManager.connect(user).harvestBatch([{v3Pool: v3PoolCA, tokenId: 1}]);
           const afBalance = await unx.balanceOf(user.address);
 
           const endBlock = harvest.blockNumber || 0;
@@ -466,10 +467,10 @@ describe("Unchain Swap", () => {
           await mine(10);
 
           const userReward = (
-            await nfpManager.connect(user).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 1})
+            await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}])
           )[0];
           const otherReward = (
-            await nfpManager.connect(other).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 2})
+            await nfpManager.connect(other).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 2}])
           )[0];
 
           const userStartBlock = userAddLiq.blockNumber || 0;
@@ -537,7 +538,7 @@ describe("Unchain Swap", () => {
           await mine(10);
 
           const bfReward = (
-            await nfpManager.connect(user).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 1})
+            await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}])
           )[0];
           expect(bfReward).to.be.equal(0);
 
@@ -553,7 +554,7 @@ describe("Unchain Swap", () => {
           const startBlock = allocateReward.blockNumber || 0;
           const endBlock = startBlock + 10;
           const afReward = (
-            await nfpManager.connect(user).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 1})
+            await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}])
           )[0];
           const userExpectedValue = fixedBigInt(
             BigInt(endBlock - startBlock) *
@@ -570,7 +571,7 @@ describe("Unchain Swap", () => {
           const delistBlock = inactive.blockNumber || 0;
           await mine(10);
           const afDelistReward = (
-            await nfpManager.connect(user).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 1})
+            await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}])
           )[0];
           const afDelistExpectedValue = fixedBigInt(
             BigInt(delistBlock - startBlock) * rewardPerBlock
@@ -593,7 +594,7 @@ describe("Unchain Swap", () => {
           const reListBlock = reAllocateReward.blockNumber || 0;
           const lastBlock = reListBlock + 10;
           const fianlReward = (
-            await nfpManager.connect(user).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 1})
+            await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}])
           )[0];
           const finalExpectedValue = fixedBigInt(
             BigInt(lastBlock - reListBlock + 1) *
@@ -650,14 +651,14 @@ describe("Unchain Swap", () => {
           const _leftRangeValue = (5 * 90 / 100).toString(); // 90%
           const _rightRangeValue =  (5 * 110 / 100).toString(); // 110%
 
-          const lowPrice = tryParsePrice(baseToken, quoteToken, _leftRangeValue);
-          const highPrice = tryParsePrice(baseToken, quoteToken, _rightRangeValue);
+          const lowPrice = tryParsePrice(baseToken, quoteToken, _rightRangeValue);
+          const highPrice = tryParsePrice(baseToken, quoteToken, _leftRangeValue);
           if (!lowPrice || !highPrice) throw new Error('fail get price');
 
           let lowTick = tryParseTick(baseToken, quoteToken, FeeAmount.MEDIUM, lowPrice.toSignificant(8)) || 0;
           let highTick = tryParseTick(baseToken, quoteToken, FeeAmount.MEDIUM, highPrice.toSignificant(8)) || 0;
-          console.log(lowTick)
-          console.log(highTick)
+          console.log('lowTick:', lowTick)
+          console.log('highTick:', highTick)
 
           await addLiquidity(
             { currency: baseToken, amount: parseEther("0.895559435335869704") },
@@ -692,7 +693,7 @@ describe("Unchain Swap", () => {
             "Before swap 1: ",
             formatEther((await nfpManager
                 .connect(user)
-                .harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: tokenId}))[0].toString())
+                .harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: tokenId}]))[0].toString())
           );          
           console.log("bf UNX", formatEther(await unx.balanceOf(user.address)));
           console.log("bf wETH: ", formatEther(await wETH9.balanceOf(user.address)));
@@ -715,7 +716,7 @@ describe("Unchain Swap", () => {
             "after swap 1: ",
             formatEther((await nfpManager
               .connect(user)
-              .harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: tokenId}))[0].toString())
+              .harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: tokenId}]))[0].toString())
           );
 
           await mine(10);
@@ -724,7 +725,7 @@ describe("Unchain Swap", () => {
             "after swap 2: ",
             formatEther((await nfpManager
               .connect(user)
-              .harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: tokenId}))[0].toString())
+              .harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: tokenId}]))[0].toString())
           );
 
           path = encodePath([token0.address, token1.address], [FeeAmount.MEDIUM]);
@@ -748,7 +749,7 @@ describe("Unchain Swap", () => {
             "after swap 3: ",
             formatEther((await nfpManager
               .connect(user)
-              .harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: tokenId}))[0].toString())
+              .harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: tokenId}]))[0].toString())
           );
 
         });
@@ -817,7 +818,7 @@ describe("Unchain Swap", () => {
             await mine(minedBlocks);
 
             const userReward = (
-              await nfpManager.connect(user).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 1})
+              await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}])
             )[0];
             const period =
               i > 0
@@ -829,12 +830,42 @@ describe("Unchain Swap", () => {
             );
 
             console.log(
-              `${i + 1} halving\n${formatEther(userReward)} : ${formatEther(
-                expectedValue
-              )}`
+              `${i} ~ ${i + 1} halving\n${formatEther(userReward)} : ${formatEther(expectedValue)}`
             );
             i++;
           }
+
+          if(i == 5) {
+            const targetBlock = Number(await halving.endBlock());
+            console.log("target:", targetBlock);
+            const preHalvingBlock =
+              i > 0 ? Number(halvingBlocks[i - 1]) : startBlock;
+            console.log("start:", preHalvingBlock);
+            const minedBlocks =
+              i > 0
+                ? targetBlock - preHalvingBlock
+                : targetBlock - preHalvingBlock + 1;
+            console.log("mined:", minedBlocks);
+            await mine(minedBlocks);
+
+            const userReward = (
+              await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}])
+            )[0];
+            const period =
+              i > 0
+                ? targetBlock - preHalvingBlock - 1
+                : targetBlock - preHalvingBlock;
+
+            expectedValue += fixedBigInt(
+              BigInt(period) * (await lmPool.rewardPerBlockOf(i))
+            );
+
+            console.log(
+              `${i}halving ~ end \n${formatEther(userReward)} : ${formatEther(expectedValue)}`
+            );
+          }
+
+
         });
 
         it("Case 6: Should be update reward per block when update allocation", async () => {
@@ -884,7 +915,7 @@ describe("Unchain Swap", () => {
   
             await mine(10);
   
-            const harvest = await nfpManager.connect(user).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 1});
+            const harvest = await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}]);
 
             const startBlock = addLiq.blockNumber || 0;
             const endBlock = startBlock + 10;
@@ -905,7 +936,7 @@ describe("Unchain Swap", () => {
 
             await mine(10);
 
-            const afHarvest = await nfpManager.connect(user).harvest.staticCallResult({v3Pool: v3PoolCA, tokenId: 1});
+            const afHarvest = await nfpManager.connect(user).harvestBatch.staticCallResult([{v3Pool: v3PoolCA, tokenId: 1}]);
 
             const afStartBlock = modifyAlloc.blockNumber || 0;
             const afEndBlock = afStartBlock + 10;
@@ -934,17 +965,17 @@ describe("Unchain Swap", () => {
 
       describe('Create Pool by Admin/Executor', () => {
         it('Create pool by Admin', async () => {
-          await expect(v3Manager.createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM)).to.be.not.reverted;
+          await expect(v3Manager.createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM, 0)).to.be.not.reverted;
         });
 
         it('Create pool by Executor', async () => {
           await v3Manager.setExecutor(executor.address);
-          await expect(v3Manager.connect(executor).createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM)).to.be.not.reverted;
+          await expect(v3Manager.connect(executor).createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM, 0)).to.be.not.reverted;
         });
 
         it('Should be revert when caller is not Admin or Excutor', async () => {
           await v3Manager.setExecutor(executor.address);
-          await expect(v3Manager.connect(other).createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM)).to.be.revertedWith('Caller is unauthorized')
+          await expect(v3Manager.connect(other).createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM, 0)).to.be.revertedWith('Caller is unauthorized')
         });
       });
 
@@ -961,7 +992,8 @@ describe("Unchain Swap", () => {
             token0.address,
             token1.address,
             FeeAmount.MEDIUM,
-            sqrtPriceX96
+            sqrtPriceX96,
+            parseEther('100')
           ]);
           const mint = nfpManager.interface.encodeFunctionData('mint', [
             {
@@ -1009,7 +1041,7 @@ describe("Unchain Swap", () => {
           await v3Manager.setDeployFeeCollector(owner.address);
           await v3Manager.setDeployFee(parseEther('100000'));
 
-          await expect(nfpManager.connect(user).multicall(data, { value: parseEther('1') })).to.be.revertedWith('pay for deployement fee failed');
+          await expect(nfpManager.connect(user).multicall(data, { value: parseEther('1') })).to.be.revertedWith('requiredDeployFee does not equal deployFee');
         });
       });
     });
@@ -1023,7 +1055,7 @@ describe("Unchain Swap", () => {
 
       beforeEach(async () => {
         [token0, token1] = sortedTokens(unx, wETH9);
-        await v3Manager.createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM);
+        await v3Manager.createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM, 0);
         v3Pool = await v3Factory.getPool(unx.address, wETH9.address, FeeAmount.MEDIUM);
         lmPool = await (await ethers.getContractAt('UNXwapV3Pool', v3Pool)).lmPool();
         await v3Manager.list(v3Pool);
@@ -1038,7 +1070,8 @@ describe("Unchain Swap", () => {
           token0.address,
           token1.address,
           FeeAmount.MEDIUM,
-          sqrtPriceX96
+          sqrtPriceX96,
+          0
         ]);
         mint = nfpManager.interface.encodeFunctionData('mint', [
           {
@@ -1158,7 +1191,7 @@ describe("Unchain Swap", () => {
           amount1Max: uint128Max,
         }]);
         
-        harvest = nfpManager.interface.encodeFunctionData('harvest', [{ v3Pool: v3Pool, tokenId: 1 }]);
+        harvest = nfpManager.interface.encodeFunctionData('harvestBatch', [[{ v3Pool: v3Pool, tokenId: 1 }]]);
         unwrapWETH9 = nfpManager.interface.encodeFunctionData('unwrapWETH9', [0, user.address]);
         sweepToken = nfpManager.interface.encodeFunctionData('sweepToken', [unx.address, 0, user.address])
 
@@ -1194,7 +1227,7 @@ describe("Unchain Swap", () => {
 
       beforeEach(async () => {
         [token0, token1] = sortedTokens(unx, sampleERC20);
-        await v3Manager.createPool(unx.address, sampleERC20.address, ZeroAddress, FeeAmount.MEDIUM);
+        await v3Manager.createPool(unx.address, sampleERC20.address, ZeroAddress, FeeAmount.MEDIUM, 0);
         v3Pool = await v3Factory.getPool(unx.address, sampleERC20.address, FeeAmount.MEDIUM);
         lmPool = await (await ethers.getContractAt('UNXwapV3Pool', v3Pool)).lmPool();
         await v3Manager.list(v3Pool);
@@ -1211,7 +1244,8 @@ describe("Unchain Swap", () => {
           token0.address,
           token1.address,
           FeeAmount.MEDIUM,
-          sqrtPriceX96
+          sqrtPriceX96,
+          0
         ]);
         mint = nfpManager.interface.encodeFunctionData('mint', [
           {
@@ -1331,7 +1365,7 @@ describe("Unchain Swap", () => {
           amount1Max: uint128Max,
         }]);
         
-        harvest = nfpManager.interface.encodeFunctionData('harvest', [{ v3Pool: v3Pool, tokenId: 1 }]);
+        harvest = nfpManager.interface.encodeFunctionData('harvestBatch', [[{ v3Pool: v3Pool, tokenId: 1 }]]);
 
         const reward = fixedBigInt(await (await ethers.getContractAt('UNXwapV3LmPool', lmPool)).currentRewardPerBlock());
         const refund = await nfpManager.connect(user).decreaseLiquidity.staticCall({
@@ -1360,13 +1394,13 @@ describe("Unchain Swap", () => {
       let createAndInitializePoolIfNecessary: string, mint: string, collect: string;
 
       beforeEach(async () => {
-        await v3Manager.createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM);
+        await v3Manager.createPool(unx.address, wETH9.address, ZeroAddress, FeeAmount.MEDIUM, 0);
         _v3Pool = await v3Factory.getPool(unx.address, wETH9.address, FeeAmount.MEDIUM);
         const _v3PoolContract = await ethers.getContractAt('UNXwapV3Pool', _v3Pool);
         await _v3PoolContract.initialize(sqrtPriceX96);
 
         [token0, token1] = sortedTokens(unx, sampleERC20);
-        await v3Manager.createPool(unx.address, sampleERC20.address, ZeroAddress, FeeAmount.MEDIUM);
+        await v3Manager.createPool(unx.address, sampleERC20.address, ZeroAddress, FeeAmount.MEDIUM, 0);
         v3Pool = await v3Factory.getPool(unx.address, sampleERC20.address, FeeAmount.MEDIUM);
         await v3Manager.list(v3Pool);
         await v3Manager.allocate([{ v3Pool: v3Pool, allocation: 1000 }]);
@@ -1386,7 +1420,8 @@ describe("Unchain Swap", () => {
           token0.address,
           token1.address,
           FeeAmount.MEDIUM,
-          sqrtPriceX96
+          sqrtPriceX96,
+          0
         ]);
         mint = nfpManager.interface.encodeFunctionData('mint', [
           {
@@ -1651,7 +1686,7 @@ const _initAddLiquidity = async (
 
   const createAndInitializeData = nfpManager.interface.encodeFunctionData(
     "createAndInitializePoolIfNecessary",
-    [token0.address, token1.address, feeAmount, _sqrtRatioX96]
+    [token0.address, token1.address, feeAmount, _sqrtRatioX96, 0]
   );
 
   const mintData = nfpManager.interface.encodeFunctionData("mint", [
@@ -1757,6 +1792,7 @@ const addLiquidity = async (
         _token1.currency.wrapped.address,
         _tick.feeAmount,
         _tick.currentSqrt.toString(),
+        0
       ]
     );
     txs.push(createAndInitializeData);
