@@ -102,6 +102,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     }
 
     function setMaxAllocation(uint256 maxValue) external onlyManager override {
+        require(maxValue >= totalAllocation, "LiquidityMiningFactory: Below limit");
         uint256 oldValue = maxAllocation;
         maxAllocation = maxValue;
         emit SetMaxAllocation(oldValue, maxValue);
