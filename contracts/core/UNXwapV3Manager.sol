@@ -122,9 +122,11 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     }
 
     function _operateDeployFeeProtocol(address payer) internal {
-        (bool success, bytes memory data) = deployFeeToken.call(abi.encodeWithSelector(IERC20.transferFrom.selector, payer, deployFeeCollector, deployFee));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'pay for deployement fee failed');
+        if(deployFeeCollector != address(0) && deployFeeToken != address(0)) {
+            (bool success, bytes memory data) = deployFeeToken.call(abi.encodeWithSelector(IERC20.transferFrom.selector, payer, deployFeeCollector, deployFee));
+            require(success && (data.length == 0 || abi.decode(data, (bool))), 'pay for deployement fee failed');
 
-        emit CollectDeployFee(payer, deployFeeCollector, deployFeeToken, deployFee);
+            emit CollectDeployFee(payer, deployFeeCollector, deployFeeToken, deployFee);
+        }
     }
 }
