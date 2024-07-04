@@ -288,6 +288,9 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
             feeProtocol: 0,
             unlocked: true
         });
+        
+        // set protocolFee
+        setFeeProtocol(4, 4);
 
         emit Initialize(sqrtPriceX96, tick);
     }
@@ -849,7 +852,7 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
     }
 
     /// @inheritdoc IUniswapV3PoolOwnerActions
-    function setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) external override lock onlyFactoryOwner {
+    function setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) public override lock onlyFactoryOwner {
         require(
             (feeProtocol0 == 0 || (feeProtocol0 >= 4 && feeProtocol0 <= 10)) &&
             (feeProtocol1 == 0 || (feeProtocol1 >= 4 && feeProtocol1 <= 10))
