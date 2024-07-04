@@ -56,7 +56,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         _;
     }
 
-    modifier onlyNFPManagerOrLmFactory() {
+    modifier onlyNFPManagerOrLmFactoryOrV3Pool() {
         require(msg.sender == address(nonfungiblePositionManager)
             || msg.sender == address(lmFactory)
             || msg.sender == address(v3Pool),
@@ -76,7 +76,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         lmFactory = IUNXwapV3LmFactory(msg.sender);
     }
 
-    function accumulateReward() public override onlyNFPManagerOrLmFactory {
+    function accumulateReward() public override onlyNFPManagerOrLmFactoryOrV3Pool {
         uint256 genesisBlock = halvingProtocol.genesisBlock();
         uint256 currentBlock = block.number;
 
