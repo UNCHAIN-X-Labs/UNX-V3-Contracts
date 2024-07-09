@@ -96,7 +96,7 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     }
 
     function setFeeProtocol(ProtocolFeeParams[] calldata params) external override onlyOwnerOrExecutor {
-        for(uint256 i = 0; i < params.length; i++) {
+        for(uint256 i = 0; i < params.length; ++i) {
             UNXwapV3Pool(params[i].v3Pool).setFeeProtocol(params[i].feeProtocol0, params[i].feeProtocol1);
         }
     }
@@ -119,7 +119,7 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
     function collectProtocol(ProtocolFeeParams[] calldata params) external override returns (uint128 totalAmount0, uint128 totalAmount1) {
         require(msg.sender == protocolFeeCollector);
-        for(uint256 i = 0; i < params.length; i++) {
+        for(uint256 i = 0; i < params.length; ++i) {
             (uint128 amount0, uint128 amount1) = UNXwapV3Pool(params[i].v3Pool).collectProtocol(protocolFeeCollector, params[i].feeProtocol0, params[i].feeProtocol1);
             totalAmount0 += amount0;
             totalAmount1 += amount1;

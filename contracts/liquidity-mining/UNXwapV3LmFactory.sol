@@ -87,7 +87,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         uint256 afLen = listedV3Pools.length();
         if(remains > 0 && afLen > 0) {
             uint256 divi = remains / afLen;
-            for(uint256 i = 0; i < afLen; i++) {
+            for(uint256 i = 0; i < afLen; ++i) {
                 _setAllocation(lmPools[listedV3Pools.at(i)], allocationOf(lmPools[listedV3Pools.at(i)]) + divi);
             }
         }
@@ -96,7 +96,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     }
 
     function allocate(IUNXwapV3Manager.PoolAllocationParams[] calldata params) external override onlyManager allocationLimiter {
-        for(uint256 i = 0; i < params.length; i++) {
+        for(uint256 i = 0; i < params.length; ++i) {
             _setAllocation(lmPools[params[i].v3Pool], params[i].allocation);
         }
     }
@@ -115,7 +115,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     function listedPools() public view returns (ListingInfo[] memory result) {
         uint256 len = listedV3Pools.length();
         result = new ListingInfo[](len);
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             address v3Pool = listedV3Pools.at(i);
             result[i] = ListingInfo(v3Pool, allocationOf(lmPools[v3Pool]));
         }

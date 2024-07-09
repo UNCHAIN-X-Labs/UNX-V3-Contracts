@@ -104,7 +104,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
             uint256[] memory halvingBlocks = halvingProtocol.halvingBlocks();
             uint256 tmpUpdatedBlock = lastestBlock;
 
-            for(uint256 i = 0; i < halvingBlocks.length; i++) {
+            for(uint256 i = 0; i < halvingBlocks.length; ++i) {
                 if(halvingBlocks[i] > tmpUpdatedBlock && halvingBlocks[i] <= targetBlock) {
                     // Accumlate reward before halving
                     // before-halving duration (halvingBlocks[i] - tmpUpdatedBlock - 1)

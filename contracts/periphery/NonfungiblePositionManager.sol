@@ -451,7 +451,7 @@ contract NonfungiblePositionManager is
     /// @notice Transfer reward to position owners in batch.
     /// @param params The array of {HarvestParams}
     function harvestBatch(HarvestParams[] calldata params) external nonReentrant returns (uint256 reward) {
-        for (uint256 i = 0; i < params.length; i++) {
+        for (uint256 i = 0; i < params.length; ++i) {
             reward += IUNXwapV3LmPool(IUNXwapV3Pool(params[i].v3Pool).lmPool()).harvest(params[i].tokenId);
         }
     }

@@ -34,7 +34,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         totalSupply = options.totalSupply;
 
         uint256 totalMiningBeforeLastHalving;
-        for(uint256 i = 0; i < options.totalNum; i++) {
+        for(uint256 i = 0; i < options.totalNum; ++i) {
             totalMiningBeforeLastHalving += (options.halvingInterval * (options.initRewardPerDay / 28800 / (2 ** i)));
         }
 
@@ -71,13 +71,13 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         blocks = new uint256[](totalNum);
         uint256 genesisBlock_ = genesisBlock;
 
-        for(uint256 i = 0; i < totalNum; i++) {
+        for(uint256 i = 0; i < totalNum; ++i) {
             blocks[i] = genesisBlock_ + (halvingInterval * (i + 1));
         }
     }
 
     function calculateTotalMiningBeforeLastHalving() public view override returns (uint256 totalMining) {
-        for(uint256 i = 0; i < totalNum; i++) {
+        for(uint256 i = 0; i < totalNum; ++i) {
             totalMining += (halvingInterval * (initReward / (2 ** i)));
         }
     }
