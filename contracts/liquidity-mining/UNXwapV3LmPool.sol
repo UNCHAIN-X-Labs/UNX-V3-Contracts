@@ -30,6 +30,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
     uint256 public constant REWARD_PRECISION = 1e12;
     uint256 constant Q128 = 0x100000000000000000000000000000000;
 
+    /// @inheritdoc IUNXwapV3LmPool
     IUNXwapV3Pool public immutable override v3Pool;
     INonfungiblePositionManager public immutable nonfungiblePositionManager;
     IHalvingProtocol public immutable halvingProtocol;
@@ -41,7 +42,9 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
     uint256 public rewardGrowthGlobalX128;
 
     // apply 2 decimals. 100.00 % => 10000
+    /// @inheritdoc IUNXwapV3LmPool
     uint256 public override allocation;
+    /// @inheritdoc IUNXwapV3LmPool
     bool public override actived;
 
     mapping(int24 => LmTick.Info) public lmTicks;
@@ -82,6 +85,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         lmFactory = IUNXwapV3LmFactory(msg.sender);
     }
 
+    /// @inheritdoc IUNXwapV3LmPool
     function accumulateReward() public override onlyNFPManagerOrLmFactoryOrV3Pool {
         uint256 genesisBlock = halvingProtocol.genesisBlock();
         uint256 currentBlock = block.number;
@@ -123,6 +127,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         lastUpdateBlock = currentBlock;
     }
 
+    /// @inheritdoc IUNXwapV3LmPool
     function crossLmTick(int24 tick, bool zeroForOne) external override onlyPool {
         if(lmTicks[tick].liquidityGross == 0) {
             return;
@@ -137,6 +142,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         lmLiquidity = LiquidityMath.addDelta(lmLiquidity, lmLiquidityNet);
     }
 
+    /// @inheritdoc IUNXwapV3LmPool
     function harvest(uint256 tokenId) external override onlyNFPManager returns (uint256 reward) {
         (, , , , , int24 tickLower, int24 tickUpper, uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(
             tokenId
@@ -146,6 +152,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         reward = _harvestOperation(tickLower, tickUpper, liquidity, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
     }
 
+    /// @inheritdoc IUNXwapV3LmPool
     function updateLiquidity(address user, uint256 tokenId) external override onlyNFPManager {
         (, , , , , int24 tickLower, int24 tickUpper, uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(
             tokenId
@@ -170,6 +177,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         }
     }
 
+    /// @inheritdoc IUNXwapV3LmPool
     function activate() external override onlyLmFactory {
         require(!actived, "lmPool is already actived");
         actived = true;
@@ -177,31 +185,48 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         emit Activate();
     }
 
+    /// @inheritdoc IUNXwapV3LmPool
     function deactivate() external override onlyLmFactory whenActived {
         delete actived;
         lastActivedBlock = block.number;
         emit Deactivate();
     }
 
+    /// @inheritdoc IUNXwapV3LmPool
     function setAllocation(uint256 alloc) external override onlyLmFactory {
         require(actived);
         accumulateReward();
         allocation = alloc;
     }
 
+    /// @inheritdoc IUNXwapV3LmPool
     function getRewardGrowthInside(int24 tickLower, int24 tickUpper) public view override returns (uint256 rewardGrowthInsideX128) {
         (, int24 tick, , , , ,) = v3Pool.slot0();
         return lmTicks.getRewardGrowthInside(tickLower, tickUpper, tick, rewardGrowthGlobalX128);
     }
 
+    /**
+     * @notice Returns the reward per block of {UNXwapV3LmPool} for the current halving cycle.
+     */
     function currentRewardPerBlock() public view returns (uint256 reward) {
         reward = halvingProtocol.currentRewardPerBlock() * allocation / 10000;
     }
 
+    /**
+     * @notice Returns the reward per block of {UNXwapV3LmPool} for a specific halving cycle.
+     * @param halvingNum The halving number
+     */
     function rewardPerBlockOf(uint256 halvingNum) public view returns (uint256 reward) {
         reward = halvingProtocol.rewardPerBlockOf(halvingNum) * allocation / 10000;
     }
 
+    /**
+     * @notice Calculates the reward of the position.
+     * @param rewardGrowthInside The reward growth data.
+     * @param liquidity The liquidity of the positoin.
+     * @param tokenId The token ID of the position.
+     * @return reward The reward of the position.
+     */
     function _calculateReward(uint256 rewardGrowthInside, uint128 liquidity, uint256 tokenId) internal view returns (uint256 reward) {
         uint256 rewardGrowthInsideDelta;
         rewardGrowthInsideDelta = rewardGrowthInside - positionRewardInfos[tokenId].rewardGrowthInside;
@@ -209,6 +234,14 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         reward += positionRewardInfos[tokenId].reward;
     }
 
+    /**
+     * @notice Transfers or updates reward of the position.
+     * @param tickLower The lower tick boundary of the position.
+     * @param tickUpper The upper tick boundary of the position.
+     * @param liquidity The liquidity of the positoin.
+     * @param tokenId The token ID of the position.
+     * @param to The address of receiver.
+     */
     function _harvestOperation(int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 tokenId, address to) internal returns (uint256 reward) {
         uint256 rewardGrowthInside = getRewardGrowthInside(tickLower, tickUpper);
         reward = _calculateReward(rewardGrowthInside, liquidity, tokenId);
@@ -225,6 +258,12 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         }
     }
 
+    /**
+     * @notice Updates the position.
+     * @param tickLower The lower tick boundary of the position.
+     * @param tickUpper The upper tick boundary of the position.
+     * @param liquidityDelta The change in pool liquidity as a result of the position update.
+     */
     function _updatePosition(int24 tickLower, int24 tickUpper, int128 liquidityDelta) internal {
         (, int24 tick, , , , ,) = v3Pool.slot0();
         uint128 maxLiquidityPerTick = v3Pool.maxLiquidityPerTick();

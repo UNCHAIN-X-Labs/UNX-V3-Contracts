@@ -13,12 +13,15 @@ import './interfaces/IHalvingProtocol.sol';
  * After the final halving, mining will continue with a fixed reward(last reward amount halved) amount until the remaining supply is exhausted.
  */
 contract HalvingProtocol is IHalvingProtocol, Ownable {
+    /// @inheritdoc IHalvingProtocol
     uint256 public immutable override genesisBlock;
     uint256 public immutable halvingInterval;
     uint256 public immutable totalNum;
     uint256 public immutable initReward;
     uint256 public immutable lastHalvingBlock;
+    /// @inheritdoc IHalvingProtocol
     uint256 public immutable override endBlock;
+    /// @inheritdoc IHalvingProtocol
     uint256 public immutable override totalSupply;
     address public immutable token;
     mapping(address => bool) public operators;
@@ -41,21 +44,25 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         endBlock = options.genesisBlock + (options.halvingInterval * options.totalNum) + ((options.totalSupply - totalMiningBeforeLastHalving) / (options.initRewardPerDay / 28800 / (2 ** options.totalNum))) - 1;
     }
 
-    function setOperator(address account, bool trueOrFalse) external onlyOwner {
+    /// @inheritdoc IHalvingProtocol
+    function setOperator(address account, bool trueOrFalse) external override onlyOwner {
         // Operator should be LmFactory or Something rewarded with UNX.
         operators[account] = trueOrFalse;
         emit SetOperator(account, trueOrFalse);
     }
 
+    /// @inheritdoc IHalvingProtocol
     function transferReward(address to, uint256 amount) external override {
         require(operators[msg.sender], "Halving: caller is unauthorized");
         IERC20(token).transfer(to, amount);
     }
 
+    /// @inheritdoc IHalvingProtocol
     function rewardPerBlockOf(uint256 halvingNum) external view override returns (uint256 reward) {
         reward = initReward / (2 ** halvingNum);
-    }    
+    }
 
+    /// @inheritdoc IHalvingProtocol
     function currentRewardPerBlock() external view override returns (uint256 reward) {
         uint256 currentBlock = block.number;
         if(currentBlock < genesisBlock || currentBlock > endBlock) {
@@ -67,6 +74,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         reward = halvingNum > totalNum ? initReward / (2 ** totalNum) : initReward / (2 ** halvingNum);
     }
 
+    /// @inheritdoc IHalvingProtocol
     function halvingBlocks() external view override returns (uint256[] memory blocks) {
         blocks = new uint256[](totalNum);
         uint256 genesisBlock_ = genesisBlock;
@@ -76,6 +84,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
         }
     }
 
+    /// @inheritdoc IHalvingProtocol
     function calculateTotalMiningBeforeLastHalving() public view override returns (uint256 totalMining) {
         for(uint256 i = 0; i < totalNum; ++i) {
             totalMining += (halvingInterval * (initReward / (2 ** i)));
