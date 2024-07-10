@@ -76,6 +76,12 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     }
 
     function setDeployFeeToken(address token) external override onlyOwnerOrExecutor {
+        uint32 size;
+        assembly {
+            size := extcodesize(token)
+        }
+        require(size > 0);
+
         deployFeeToken = token;
         emit SetDeployFeeToken(token);
     }
