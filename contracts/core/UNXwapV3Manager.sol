@@ -111,10 +111,12 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
     function setNfpManager(address nfpManager_) external onlyOwner {
         nfpManager = nfpManager_;
+        emit SetNfpManager(nfpManager_);
     }
 
     function setProtocolFeeCollector(address collector) external onlyOwner {
         protocolFeeCollector = collector;
+        emit SetProtocolFeeCollector(collector);
     }
 
     function collectProtocol(ProtocolFeeParams[] calldata params) external override returns (uint128 totalAmount0, uint128 totalAmount1) {

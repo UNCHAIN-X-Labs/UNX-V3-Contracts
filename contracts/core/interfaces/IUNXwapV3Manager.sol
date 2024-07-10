@@ -25,6 +25,8 @@ interface IUNXwapV3Manager {
     event SetDeployable(bool trueOrFalse);
     event SetDeployFee(address indexed token, uint256 fee);
     event SetLmPool(address indexed v3Pool, address indexed lmPool);
+    event SetNfpManager(address nfpManager);
+    event SetProtocolFeeCollector(address collector);
 
     function createPool(address tokenA, address tokenB, address payer, uint24 fee, uint256 requiredDeployFee) external returns (address v3Pool, address lmPool);
     function list(address v3Pool) external returns (address lmPool);
