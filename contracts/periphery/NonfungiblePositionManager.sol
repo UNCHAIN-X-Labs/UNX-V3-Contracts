@@ -161,6 +161,7 @@ contract NonfungiblePositionManager is
     payable
     override
     checkDeadline(params.deadline)
+    nonReentrant
     returns (
         uint256 tokenId,
         uint128 liquidity,
@@ -236,6 +237,7 @@ contract NonfungiblePositionManager is
     payable
     override
     checkDeadline(params.deadline)
+    nonReentrant
     returns (
         uint128 liquidity,
         uint256 amount0,
@@ -299,6 +301,7 @@ contract NonfungiblePositionManager is
     override
     isAuthorizedForToken(params.tokenId)
     checkDeadline(params.deadline)
+    nonReentrant
     returns (uint256 amount0, uint256 amount1)
     {
         require(params.liquidity > 0);
@@ -460,7 +463,7 @@ contract NonfungiblePositionManager is
     /// @dev This function should be called when any update liquidity.
     /// @param pool The IUNXwapV3Pool interface
     /// @param tokenId The token ID of position
-    function _updateLmPostion(IUNXwapV3Pool pool, uint256 tokenId) internal nonReentrant {
+    function _updateLmPostion(IUNXwapV3Pool pool, uint256 tokenId) internal {
         IUNXwapV3LmPool(pool.lmPool()).updateLiquidity(msg.sender, tokenId);
     }
 }
