@@ -144,12 +144,12 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
 
     /// @inheritdoc IUNXwapV3LmPool
     function harvest(uint256 tokenId) external override onlyNFPManager returns (uint256 reward) {
-        (, , , , , int24 tickLower, int24 tickUpper, uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(
+        (, , , , , int24 tickLower, int24 tickUpper, , , , , ) = nonfungiblePositionManager.positions(
             tokenId
         );
         // Update rewardGrowthInside
         accumulateReward();
-        reward = _harvestOperation(tickLower, tickUpper, liquidity, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
+        reward = _harvestOperation(tickLower, tickUpper, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
     }
 
     /// @inheritdoc IUNXwapV3LmPool
@@ -161,7 +161,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         // Update rewardGrowthInside
         accumulateReward();
         if(positionRewardInfos[tokenId].flag) {
-             _harvestOperation(tickLower, tickUpper, liquidity, tokenId, address(0));
+             _harvestOperation(tickLower, tickUpper, tokenId, address(0));
         } else {
             positionRewardInfos[tokenId].flag = true;
         }
@@ -238,13 +238,12 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
      * @notice Transfers or updates reward of the position.
      * @param tickLower The lower tick boundary of the position.
      * @param tickUpper The upper tick boundary of the position.
-     * @param liquidity The liquidity of the positoin.
      * @param tokenId The token ID of the position.
      * @param to The address of receiver.
      */
-    function _harvestOperation(int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 tokenId, address to) internal returns (uint256 reward) {
+    function _harvestOperation(int24 tickLower, int24 tickUpper, uint256 tokenId, address to) internal returns (uint256 reward) {
         uint256 rewardGrowthInside = getRewardGrowthInside(tickLower, tickUpper);
-        reward = _calculateReward(rewardGrowthInside, liquidity, tokenId);
+        reward = _calculateReward(rewardGrowthInside, uint128(positionRewardInfos[tokenId].liquidity), tokenId);
         positionRewardInfos[tokenId].rewardGrowthInside = rewardGrowthInside;
 
         if (reward > 0) {
