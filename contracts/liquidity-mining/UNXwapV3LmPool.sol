@@ -99,7 +99,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
 
         if(lmLiquidity != 0) {
             uint256 targetBlock = currentBlock > endBlock ? endBlock : currentBlock;
-            uint256 lastestBlock = lastUpdateBlock < genesisBlock - 1 ? genesisBlock : lastUpdateBlock;
+            uint256 lastestBlock = lastUpdateBlock < genesisBlock ? genesisBlock - 1 : lastUpdateBlock;
 
             if(lastestBlock >= targetBlock) {
                 return;
