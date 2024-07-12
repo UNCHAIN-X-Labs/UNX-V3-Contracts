@@ -102,14 +102,15 @@ describe("Unchain Swap", () => {
     sampleERC20.address = await sampleERC20.getAddress();
 
     const Halving = await ethers.getContractFactory("HalvingProtocol");
-    halving = await Halving.deploy({
+    halving = await Halving.deploy();
+    await halving.initialize({
       token: await unx.getAddress(),
       genesisBlock: genesisBlock,
       totalNum: 5,
       halvingInterval: 21024000,
       initRewardPerDay: parseEther("300000"),
       totalSupply: parseEther("9550000000"),
-    });
+    })
 
     await unx.transfer(await halving.getAddress(), parseEther("9550000000"));
 
@@ -393,6 +394,24 @@ describe("Unchain Swap", () => {
           const reward = afBalance - bfBalance;
 
           expect(reward).to.be.equal(expectedValue);
+
+          // Increase Liquidity
+          console.log('before', await lmPool.positionRewardInfos(1));
+          await mine(10);
+          console.log(await lmPool.currentRewardPerBlock());
+
+          await nfpManager.connect(user).increaseLiquidity({
+            tokenId: 1,
+            amount0Desired: parseEther("50"),
+            amount1Desired: parseEther("50"),
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline ,
+          }, {
+            value: parseEther("100"),
+          });
+
+          console.log('after', await lmPool.positionRewardInfos(1));
         });
 
         it("Case 2: 2 Users add liquidity 1 LM Pool", async () => {
