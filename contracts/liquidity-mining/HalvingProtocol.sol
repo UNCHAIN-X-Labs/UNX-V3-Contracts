@@ -30,6 +30,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
 
     constructor() Ownable() {}
 
+    /// @inheritdoc IHalvingProtocol
     function initialize(HalvingOptions calldata options) external override onlyOwner {
         require(genesisBlock == 0, 'Only execute once.');
         require(options.genesisBlock != 0, 'The genesis block cannot be set to 0.');
