@@ -14,25 +14,32 @@ import './interfaces/IHalvingProtocol.sol';
  */
 contract HalvingProtocol is IHalvingProtocol, Ownable {
     /// @inheritdoc IHalvingProtocol
-    uint256 public immutable override genesisBlock;
-    uint256 public immutable halvingInterval;
-    uint256 public immutable totalNum;
-    uint256 public immutable initReward;
-    uint256 public immutable lastHalvingBlock;
+    uint256 public override genesisBlock;
     /// @inheritdoc IHalvingProtocol
-    uint256 public immutable override endBlock;
+    uint256 public override endBlock;
     /// @inheritdoc IHalvingProtocol
-    uint256 public immutable override totalSupply;
-    address public immutable token;
+    uint256 public override totalSupply;
+
+    uint256 public halvingInterval;
+    uint256 public totalNum;
+    uint256 public initRewardPerBlcok;
+    uint256 public lastHalvingBlock;
+    address public token;
+
     mapping(address => bool) public operators;
 
-    constructor(HalvingOptions memory options) Ownable() {
+    constructor() Ownable() {}
+
+    function initialize(HalvingOptions calldata options) external override onlyOwner {
+        require(genesisBlock == 0, 'Only execute once.');
+        require(options.genesisBlock != 0, 'The genesis block cannot be set to 0.');
+
         // Set halving options.
         token = options.token;
         genesisBlock = options.genesisBlock;
         halvingInterval = options.halvingInterval;
         totalNum = options.totalNum;
-        initReward = options.initRewardPerDay / 28800;
+        initRewardPerBlcok = options.initRewardPerDay / 28800;
         lastHalvingBlock = options.genesisBlock + (options.halvingInterval * options.totalNum);
         totalSupply = options.totalSupply;
 
@@ -59,7 +66,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
 
     /// @inheritdoc IHalvingProtocol
     function rewardPerBlockOf(uint256 halvingNum) external view override returns (uint256 reward) {
-        reward = initReward / (2 ** halvingNum);
+        reward = initRewardPerBlcok / (2 ** halvingNum);
     }
 
     /// @inheritdoc IHalvingProtocol
@@ -71,7 +78,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
 
         uint256 elapsedBlocks = currentBlock - genesisBlock;
         uint256 halvingNum = elapsedBlocks / halvingInterval;
-        reward = halvingNum > totalNum ? initReward / (2 ** totalNum) : initReward / (2 ** halvingNum);
+        reward = halvingNum > totalNum ? initRewardPerBlcok / (2 ** totalNum) : initRewardPerBlcok / (2 ** halvingNum);
     }
 
     /// @inheritdoc IHalvingProtocol
@@ -87,7 +94,7 @@ contract HalvingProtocol is IHalvingProtocol, Ownable {
     /// @inheritdoc IHalvingProtocol
     function calculateTotalMiningBeforeLastHalving() public view override returns (uint256 totalMining) {
         for(uint256 i = 0; i < totalNum; ++i) {
-            totalMining += (halvingInterval * (initReward / (2 ** i)));
+            totalMining += (halvingInterval * (initRewardPerBlcok / (2 ** i)));
         }
     }
 }

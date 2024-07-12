@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
+pragma abicoder v2;
 
 interface IHalvingProtocol {
     struct HalvingOptions {
@@ -12,6 +13,13 @@ interface IHalvingProtocol {
     }
 
     event SetOperator(address indexed operator, bool trueOrFalse);
+
+    /**
+     * @notice Initialize halving protocol options.
+     * @dev It should only be called once by the owner.
+     * @param options {HalvingOptions}
+     */
+    function initialize(HalvingOptions calldata options) external;
 
     /**
      * @notice Grant operator permissions.

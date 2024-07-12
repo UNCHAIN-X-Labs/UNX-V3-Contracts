@@ -90,7 +90,7 @@ contract UNXwapV3LmPool is IUNXwapV3LmPool {
         uint256 genesisBlock = halvingProtocol.genesisBlock();
         uint256 currentBlock = block.number;
 
-        if(currentBlock <= lastUpdateBlock || currentBlock <= genesisBlock) {
+        if(currentBlock <= lastUpdateBlock || currentBlock <= genesisBlock || genesisBlock == 0) {
             return;
         }
         
