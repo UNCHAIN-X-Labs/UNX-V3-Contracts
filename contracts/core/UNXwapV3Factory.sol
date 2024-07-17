@@ -27,6 +27,22 @@ contract UNXwapV3Factory is IUniswapV3Factory, UNXwapV3PoolDeployer, NoDelegateC
         // owner should be UNXwapV3FactoryManager.
         owner = msg.sender;
         emit OwnerChanged(address(0), msg.sender);
+
+        // Initialize swap fee
+        feeAmountTickSpacing[100] = 1;
+        emit FeeAmountEnabled(100, 1);
+
+        feeAmountTickSpacing[500] = 10;
+        emit FeeAmountEnabled(500, 10);
+
+        feeAmountTickSpacing[2500] = 50;
+        emit FeeAmountEnabled(2500, 50);
+
+        feeAmountTickSpacing[5000] = 100;
+        emit FeeAmountEnabled(5000, 100);  
+
+        feeAmountTickSpacing[10000] = 200;
+        emit FeeAmountEnabled(10000, 200);
     }
 
     /// @inheritdoc IUniswapV3Factory

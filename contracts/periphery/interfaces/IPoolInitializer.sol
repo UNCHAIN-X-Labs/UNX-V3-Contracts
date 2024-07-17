@@ -17,6 +17,7 @@ interface IPoolInitializer {
         address token0,
         address token1,
         uint24 fee,
-        uint160 sqrtPriceX96
+        uint160 sqrtPriceX96,
+        uint256 requiredDeployFee
     ) external payable returns (address pool);
 }

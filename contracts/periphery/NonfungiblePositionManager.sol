@@ -2,8 +2,6 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
 import '../core/libraries/FixedPoint128.sol';
 import '../core/libraries/FullMath.sol';
 import '../core/interfaces/IUNXwapV3Pool.sol';
@@ -33,8 +31,7 @@ contract NonfungiblePositionManager is
     PoolInitializer,
     LiquidityManagement,
     PeripheryValidation,
-    SelfPermit,
-    ReentrancyGuard
+    SelfPermit
 {
     // details about the uniswap position
     struct Position {
@@ -80,13 +77,24 @@ contract NonfungiblePositionManager is
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private _tokenDescriptor;
 
+    /// @dev The address of contract owner.
     address public owner;
+
+    /// @dev The status of entrance.
+    bool private _status;
 
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
 
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
+    }
+
+    modifier nonReentrant() {
+        require(!_status);
+        _status = true;
+        _;
+        _status = false;
     }
 
     constructor(
@@ -153,6 +161,7 @@ contract NonfungiblePositionManager is
     payable
     override
     checkDeadline(params.deadline)
+    nonReentrant
     returns (
         uint256 tokenId,
         uint128 liquidity,
@@ -228,6 +237,7 @@ contract NonfungiblePositionManager is
     payable
     override
     checkDeadline(params.deadline)
+    nonReentrant
     returns (
         uint128 liquidity,
         uint256 amount0,
@@ -291,6 +301,7 @@ contract NonfungiblePositionManager is
     override
     isAuthorizedForToken(params.tokenId)
     checkDeadline(params.deadline)
+    nonReentrant
     returns (uint256 amount0, uint256 amount1)
     {
         require(params.liquidity > 0);
@@ -436,21 +447,14 @@ contract NonfungiblePositionManager is
         owner = _owner;
     }
 
-    function setTokenDescriptor(address tokenDescriptor) external {
-        require(msg.sender == owner);
+    function setTokenDescriptor(address tokenDescriptor) external onlyOwner {
         _tokenDescriptor = tokenDescriptor;
-    }
-
-    /// @notice Transfer reward to position owner.
-    /// @param params {HarvestParams}
-    function harvest(HarvestParams calldata params) external nonReentrant returns (uint256 reward) {
-        reward = IUNXwapV3LmPool(IUNXwapV3Pool(params.v3Pool).lmPool()).harvest(params.tokenId);
     }
     
     /// @notice Transfer reward to position owners in batch.
     /// @param params The array of {HarvestParams}
     function harvestBatch(HarvestParams[] calldata params) external nonReentrant returns (uint256 reward) {
-        for (uint256 i = 0; i < params.length; i++) {
+        for (uint256 i = 0; i < params.length; ++i) {
             reward += IUNXwapV3LmPool(IUNXwapV3Pool(params[i].v3Pool).lmPool()).harvest(params[i].tokenId);
         }
     }

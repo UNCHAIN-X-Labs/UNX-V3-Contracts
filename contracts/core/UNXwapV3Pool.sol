@@ -290,6 +290,9 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
         });
 
         emit Initialize(sqrtPriceX96, tick);
+
+        // set protocolFee
+        _setFeeProtocol(4, 4);
     }
 
     struct ModifyPositionParams {
@@ -849,14 +852,8 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
     }
 
     /// @inheritdoc IUniswapV3PoolOwnerActions
-    function setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) external override lock onlyFactoryOwner {
-        require(
-            (feeProtocol0 == 0 || (feeProtocol0 >= 4 && feeProtocol0 <= 10)) &&
-            (feeProtocol1 == 0 || (feeProtocol1 >= 4 && feeProtocol1 <= 10))
-        );
-        uint8 feeProtocolOld = slot0.feeProtocol;
-        slot0.feeProtocol = feeProtocol0 + (feeProtocol1 << 4);
-        emit SetFeeProtocol(feeProtocolOld % 16, feeProtocolOld >> 4, feeProtocol0, feeProtocol1);
+    function setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) public override lock onlyFactoryOwner {
+        _setFeeProtocol(feeProtocol0, feeProtocol1);
     }
 
     /// @inheritdoc IUniswapV3PoolOwnerActions
@@ -886,5 +883,15 @@ contract UNXwapV3Pool is IUNXwapV3Pool, NoDelegateCall {
     /// @dev This setter should only be called immediately after this contract is deployed.
     function setLmPool(address lmPool_) external override onlyFactoryOwner {
         lmPool = IUNXwapV3LmPool(lmPool_);
+    }
+
+    function _setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) internal {
+        require(
+            (feeProtocol0 == 0 || (feeProtocol0 >= 4 && feeProtocol0 <= 10)) &&
+            (feeProtocol1 == 0 || (feeProtocol1 >= 4 && feeProtocol1 <= 10))
+        );
+        uint8 feeProtocolOld = slot0.feeProtocol;
+        slot0.feeProtocol = feeProtocol0 + (feeProtocol1 << 4);
+        emit SetFeeProtocol(feeProtocolOld % 16, feeProtocolOld >> 4, feeProtocol0, feeProtocol1);
     }
 }
