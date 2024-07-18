@@ -22,7 +22,7 @@ import '../liquidity-mining/interfaces/IUNXwapV3LmPool.sol';
 import '../liquidity-mining/interfaces/IUNXwapV3LmFactory.sol';
 
 /// @title NFT positions
-/// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
+/// @notice Wraps UNXwap V3 positions in the ERC721 non-fungible token interface
 contract NonfungiblePositionManager is
     INonfungiblePositionManager,
     Multicall,
