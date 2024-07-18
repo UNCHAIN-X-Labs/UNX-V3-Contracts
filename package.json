@@ -5,6 +5,7 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "clean": "npx hardhat clean",
+    "docgen": "npx hardhat docgen",
     "test:lm": "npx hardhat test test/unxwap.test.ts"
   },
   "devDependencies": {
