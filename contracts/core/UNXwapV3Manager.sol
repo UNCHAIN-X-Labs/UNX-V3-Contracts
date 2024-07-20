@@ -35,10 +35,12 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     /// @inheritdoc IUNXwapV3Manager
     address public override protocolFeeCollector;
 
-    constructor() {
+    constructor(address protocolFeeCollector_) {
         factory = IUniswapV3Factory(address(new UNXwapV3Factory{salt: keccak256(abi.encode(msg.sender, address(this)))}()));
         owner = msg.sender;
-        protocolFeeCollector = msg.sender;
+        emit OwnerChanged(address(0), msg.sender);
+
+        setProtocolFeeCollector(protocolFeeCollector_);
     }
 
     /// @inheritdoc IUNXwapV3Manager
@@ -80,29 +82,27 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     
     /// @inheritdoc IUNXwapV3Manager
     function setFactoryOwner(address owner_) external override onlyOwner {
+        _validateCodeSize(owner_);
         factory.setOwner(owner_);
     }  
 
     /// @inheritdoc IUNXwapV3Manager
     function setLmFactory(address lmFactory_) external override onlyOwner {
+        _validateCodeSize(lmFactory_);
         lmFactory = IUNXwapV3LmFactory(lmFactory_);
         emit SetLmPactory(lmFactory_);
     }
 
     /// @inheritdoc IUNXwapV3Manager
     function setDeployFeeToken(address token) external override onlyOwnerOrExecutor {
-        uint32 size;
-        assembly {
-            size := extcodesize(token)
-        }
-        require(size > 0);
-
+        _validateCodeSize(token);
         deployFeeToken = token;
         emit SetDeployFeeToken(token);
     }
 
     /// @inheritdoc IUNXwapV3Manager
     function setDeployFeeCollector(address collector) external override onlyOwnerOrExecutor {
+        require(deployFeeCollector != collector);
         deployFeeCollector = collector;
         emit SetDeployFeeCollector(collector);
     }
@@ -138,15 +138,10 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
     /// @inheritdoc IUNXwapV3Manager
     function setNfpManager(address nfpManager_) external override onlyOwner {
+        _validateCodeSize(nfpManager_);
         nfpManager = nfpManager_;
         emit SetNfpManager(nfpManager_);
-    }
-
-    /// @inheritdoc IUNXwapV3Manager
-    function setProtocolFeeCollector(address collector) external override onlyOwner {
-        protocolFeeCollector = collector;
-        emit SetProtocolFeeCollector(collector);
-    }
+    }  
 
     /// @inheritdoc IUNXwapV3Manager
     function collectProtocol(CollectProtocolFeeParams[] calldata params) external override returns (CollectProtocolFeeParams[] memory result) {
@@ -159,6 +154,12 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
             result[i].amount1 = amount1;
         }
     }
+
+    /// @inheritdoc IUNXwapV3Manager
+    function setProtocolFeeCollector(address collector) public override onlyOwner {
+        protocolFeeCollector = collector;
+        emit SetProtocolFeeCollector(collector);
+    }  
 
     /**
      * @notice Collects the deploy fee from the payer.
@@ -184,5 +185,13 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
     function _setLmPool(address v3Pool, address lmPool) internal {
         UNXwapV3Pool(v3Pool).setLmPool(lmPool);
         emit SetLmPool(v3Pool, lmPool); 
-    }  
+    }
+
+    function _validateCodeSize(address addr) internal view {
+        uint32 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        require(size > 0);
+    }
 }

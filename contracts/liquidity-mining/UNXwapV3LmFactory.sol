@@ -42,6 +42,10 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     }
 
     constructor(address halving, address nfpManager, address v3Manager_, uint256 maxAllocation_, uint256 maxListing_) {
+        _validateCodeSize(halving);
+        _validateCodeSize(nfpManager);
+        _validateCodeSize(v3Manager_);
+
         halvingProtocol = IHalvingProtocol(halving);
         nonfungiblePositionManager = INonfungiblePositionManager(nfpManager);
         v3Manager = v3Manager_;
@@ -67,6 +71,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
 
     /// @inheritdoc IUNXwapV3LmFactory
     function list(address v3Pool) external override onlyManager returns (address lmPool) {
+        _validateCodeSize(v3Pool);
         lmPool = lmPools[v3Pool];
         require(lmPool != address(0), "LiquidityMiningFactory: lmPool does not exist.");
         require(!_isListed(v3Pool), "LiquidityMiningFactory: already listed.");
@@ -80,6 +85,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
 
     /// @inheritdoc IUNXwapV3LmFactory
     function delist(address v3Pool) external override onlyManager allocationLimiter {
+        _validateCodeSize(v3Pool);
         address lmPool = lmPools[v3Pool];
         require(lmPool != address(0), "LiquidityMiningFactory: lmPool does not exist.");
         require(_isListed(v3Pool), "LiquidityMiningFactory: does not exist listed pool.");
@@ -150,5 +156,13 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
      */
     function _isListed(address v3Pool) internal view returns (bool) {
         return listedV3Pools.contains(v3Pool);
+    }
+
+    function _validateCodeSize(address addr) internal view {
+        uint32 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        require(size > 0);
     }
 }

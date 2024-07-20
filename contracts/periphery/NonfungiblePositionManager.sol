@@ -443,11 +443,17 @@ contract NonfungiblePositionManager is
     }
 
     function setOwner(address _owner) external onlyOwner {
+        require(owner != _owner);
         emit OwnerChanged(owner, _owner);
         owner = _owner;
     }
 
     function setTokenDescriptor(address tokenDescriptor) external onlyOwner {
+        uint32 size;
+        assembly {
+            size := extcodesize(tokenDescriptor)
+        }
+        require(size > 0);
         _tokenDescriptor = tokenDescriptor;
     }
     

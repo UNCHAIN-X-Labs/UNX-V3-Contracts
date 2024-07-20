@@ -18,11 +18,13 @@ contract CommonAuth is ICommonAuth {
     }
 
     function setOwner(address owner_) public override onlyOwner {
+        require(owner != owner_);
         emit OwnerChanged(owner, owner_);
         owner = owner_;
     }
 
     function setExecutor(address executor_) external override onlyOwnerOrExecutor {
+        require(executor != executor_);
         emit ExecutorChanged(executor, executor_);
         executor = executor_;
     }
