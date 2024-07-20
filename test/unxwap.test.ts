@@ -69,6 +69,7 @@ let owner: HardhatEthersSigner;
 let executor: HardhatEthersSigner;
 let user: HardhatEthersSigner;
 let other: HardhatEthersSigner;
+let protocolFeeCollector: HardhatEthersSigner;
 
 let deadline = 0;
 let tokenId = 0;
@@ -84,6 +85,7 @@ describe("Unchain Swap", () => {
     executor = signer[1];
     user = signer[2];
     other = signer[3];
+    protocolFeeCollector = signer[4];
 
     // Deploy contracts and initialize for test
     const UNX = await ethers.getContractFactory("UNXToken");
@@ -115,7 +117,7 @@ describe("Unchain Swap", () => {
     await unx.transfer(await halving.getAddress(), parseEther("9550000000"));
 
     const V3Manager = await ethers.getContractFactory("UNXwapV3Manager");
-    v3Manager = await V3Manager.deploy();
+    v3Manager = await V3Manager.deploy(protocolFeeCollector);
     v3Factory = await ethers.getContractAt(
       "UNXwapV3Factory",
       await v3Manager.factory()
