@@ -56,6 +56,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
     /// @inheritdoc IUNXwapV3LmFactory
     function transferReward(address to, uint256 reward) external override {
         require(msg.sender == lmPools[address(IUNXwapV3LmPool(msg.sender).v3Pool())], "LiquidityMiningFactory: caller is not LM Pool");
+        require(to != address(0) && reward > 0);
         halvingProtocol.transferReward(to, reward);
     }
 
@@ -64,6 +65,7 @@ contract UNXwapV3LmFactory is IUNXwapV3LmFactory {
         require(lmPools[v3Pool] == address(0), "LiquidityMiningFactory: already created.");
 
         lmPool = address(new UNXwapV3LmPool{salt: keccak256(abi.encode(v3Pool, address(this)))}(v3Pool, address(nonfungiblePositionManager) , address(halvingProtocol)));
+        require(lmPool != address(0));
         lmPools[v3Pool] = lmPool;
 
         emit CreateLmPool(v3Pool, lmPool);

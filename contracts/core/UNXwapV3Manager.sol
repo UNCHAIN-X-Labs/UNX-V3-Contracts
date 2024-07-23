@@ -102,7 +102,7 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
     /// @inheritdoc IUNXwapV3Manager
     function setDeployFeeCollector(address collector) external override onlyOwnerOrExecutor {
-        require(deployFeeCollector != collector);
+        require(collector != deployFeeCollector && collector != address(0));
         deployFeeCollector = collector;
         emit SetDeployFeeCollector(collector);
     }
@@ -157,6 +157,7 @@ contract UNXwapV3Manager is IUNXwapV3Manager, CommonAuth {
 
     /// @inheritdoc IUNXwapV3Manager
     function setProtocolFeeCollector(address collector) public override onlyOwner {
+        require(collector != protocolFeeCollector && collector != address(0));
         protocolFeeCollector = collector;
         emit SetProtocolFeeCollector(collector);
     }  
