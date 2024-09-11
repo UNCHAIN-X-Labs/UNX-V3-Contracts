@@ -233,3 +233,9 @@ Validation of listing for liquidity mining.
 | ---- | ---- | ----------- |
 | v3Pool | address | The address of {UNXwapV3Pool}. |
 
+### _validateCodeSize
+
+```solidity
+function _validateCodeSize(address addr) internal view
+```
+

@@ -74,7 +74,7 @@ Returns the address of protocol fee collector.
 ### constructor
 
 ```solidity
-constructor() public
+constructor(address protocolFeeCollector_) public
 ```
 
 ### createPool
@@ -313,22 +313,6 @@ _Should only executed by owner._
 | ---- | ---- | ----------- |
 | nfpManager_ | address | The address of {NonfungiblePositionManager}. |
 
-### setProtocolFeeCollector
-
-```solidity
-function setProtocolFeeCollector(address collector) external
-```
-
-Sets the address of protocol fee collector.
-
-_Should only executed by owner._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| collector | address | The address of collector. |
-
 ### collectProtocol
 
 ```solidity
@@ -350,6 +334,22 @@ _Should only executed by {protocolFeeCollector}._
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | result | struct IUNXwapV3Manager.CollectProtocolFeeParams[] | The array of {CollectProtocolFeeParams}. |
+
+### setProtocolFeeCollector
+
+```solidity
+function setProtocolFeeCollector(address collector) public
+```
+
+Sets the address of protocol fee collector.
+
+_Should only executed by owner._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| collector | address | The address of collector. |
 
 ### _operateDeployFeeProtocol
 
@@ -380,4 +380,10 @@ Syncs the {UNXwapV3LmPool} with the {UNXwapV3Pool}
 | ---- | ---- | ----------- |
 | v3Pool | address | The contract address of {UNXwapV3Pool} |
 | lmPool | address | The contract address of {UNXwapV3LmPool} |
+
+### _validateCodeSize
+
+```solidity
+function _validateCodeSize(address addr) internal view
+```
 
